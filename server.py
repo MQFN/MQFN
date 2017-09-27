@@ -35,10 +35,12 @@ MAX_MESSAGE_SIZE = settings.MAX_MESSAGE_SIZE
 SERVER_ACKNOWLEDGEMENT = settings.SERVER_ACKNOWLEDGEMENT
 CLIENT_SHUTDOWN_SIGNAL = settings.CLIENT_SHUTDOWN_SIGNAL
 CONSUMER_REQUEST_WORD = settings.CONSUMER_REQUEST_WORD
+INVALID_PROTOCOL = settings.INVALID_PROTOCOL
+EMPTY_QUEUE_MESSAGE = settings.EMPTY_QUEUE_MESSAGE
 
-logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+# logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("bbmq_module")
-
 
 class ProduerThread(threading.Thread):
     """
@@ -105,7 +107,10 @@ class ConsumerThread(threading.Thread):
                 self.logger.info("Received request for new message")
                 self.logger.info("Fetching from queue")
                 message = self.queue.fetch_message()
-                self.socket.send(message)
+                if message == -1:
+                    self.socket.send(EMPTY_QUEUE_MESSAGE)
+            else:
+                self.socket.send(INVALID_PROTOCOL)
         self.socket.close()
 
 
@@ -253,7 +258,7 @@ class BBMQServer(object):
         queue = BBMQ()
         return queue
 
-    def spawn_connection_thread(self, connection_queue):
+    def spawn_connection_thread(self):
         """
         This method will spawn a thread to listen for new connections from new producers or
         consumers
@@ -263,7 +268,6 @@ class BBMQServer(object):
         self.connection_thread = ConnectionThread(self.sock, self.connection_queue,
                                                   self.topics.keys())
         self.connection_thread.start()
-        self.logger.info("Connection thread started")
 
     def spawn_producer_thread(self, producer_socket, inbound_socket_address, queue):
         """
@@ -272,7 +276,10 @@ class BBMQServer(object):
         :param queue:
         :return:
         """
-
+        producer_thread = ProduerThread(producer_socket, inbound_socket_address, queue)
+        self.logger.info("Starting producer thread for socket: {} and queue: {}".format(
+            inbound_socket_address, queue))
+        producer_thread.start()
 
     def spawn_consumer_thread(self, consumer_socket, inbound_socket_address, queue):
         """
@@ -281,6 +288,10 @@ class BBMQServer(object):
         :param queue:
         :return:
         """
+        consumer_thread = ConsumerThread(consumer_socket, inbound_socket_address, queue)
+        self.logger.info("Starting consumer thread for socket: {} and queue: {}".format(
+            inbound_socket_address, queue))
+        consumer_thread.start()
 
 
 def main():
@@ -319,10 +330,8 @@ def main():
             server.spawn_consumer_thread(client_socket, inbound_socket_address, queue)
 
 
-
-
-
-
+if __name__ == "__main__":
+    main()
 
 
 
