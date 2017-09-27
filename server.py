@@ -42,11 +42,12 @@ EMPTY_QUEUE_MESSAGE = settings.EMPTY_QUEUE_MESSAGE
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("bbmq_module")
 
+
 class ProduerThread(threading.Thread):
     """
     Connection thread will be waiting for connections from producers or consumers
     """
-    def __init__(self, producer_socket, inbound_socket_address, queue):
+    def __init__(self, producer_socket, inbound_socket_address, queue, topic_name):
         """
         initialize the thread. During initialization of this thread, it must confirm to the
         producer that the producer can now start communication
@@ -58,6 +59,7 @@ class ProduerThread(threading.Thread):
             inbound_socket_address))
         self.socket = producer_socket
         self.queue = queue
+        self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
 
     def run(self):
@@ -65,14 +67,34 @@ class ProduerThread(threading.Thread):
         run the thread. called when the start() method of Thread super class is called
         :return:
         """
-        while True:
-            message = self.socket.recv(MAX_MESSAGE_SIZE)
-            if message == CLIENT_SHUTDOWN_SIGNAL:
-                break
-            self.logger.info("Received payload")
-            self.logger.info("Publishing to queue")
-            self.queue.add_message(message)
-        self.socket.close()
+        close_socket = False
+        try:
+            while True:
+                try:
+                    message = self.socket.recv(MAX_MESSAGE_SIZE)
+                    if message == CLIENT_SHUTDOWN_SIGNAL:
+                        close_socket = True
+                        break
+                    self.logger.info("Received payload")
+                    self.logger.info("Publishing to queue")
+                    self.queue.add_message(message)
+                except Exception:
+                    raise socket.error
+
+        except Exception:
+            self.logger.error("Socket Error. Check the logs to know more")
+            exc_type, exc_val, exc_tb = sys.exc_info()
+            traceback.print_exception(exc_type, exc_val, exc_tb)
+
+        finally:
+
+            if close_socket:
+                self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
+                                                                           self.topic_name))
+                self.socket.close()
+
+            self.logger.info("Killing Producer Thread for socket: {} and queue: {}".format(
+                self.socket, self.topic_name))
 
 
 class ConsumerThread(threading.Thread):
@@ -80,7 +102,7 @@ class ConsumerThread(threading.Thread):
     Connection thread will be waiting for connections from producers or consumers
     """
 
-    def __init__(self, consumer_socket, inbound_socket_address, queue):
+    def __init__(self, consumer_socket, inbound_socket_address, queue, topic_name):
         """
         initialize the thread
         :param consumer_socket:
@@ -92,6 +114,7 @@ class ConsumerThread(threading.Thread):
             inbound_socket_address))
         self.socket = consumer_socket
         self.queue = queue
+        self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
 
     def run(self):
@@ -99,19 +122,39 @@ class ConsumerThread(threading.Thread):
         run the thread. called when the start() method of Thread super class is called
         :return:
         """
-        while True:
-            request = self.socket.recv(MAX_MESSAGE_SIZE)
-            if request == CLIENT_SHUTDOWN_SIGNAL:
-                break
-            if request == CONSUMER_REQUEST_WORD:
-                self.logger.info("Received request for new message")
-                self.logger.info("Fetching from queue")
-                message = self.queue.fetch_message()
-                if message == -1:
-                    self.socket.send(EMPTY_QUEUE_MESSAGE)
-            else:
-                self.socket.send(INVALID_PROTOCOL)
-        self.socket.close()
+        close_socket = False
+        try:
+            while True:
+                try:
+                    request = self.socket.recv(MAX_MESSAGE_SIZE)
+                    if request == CLIENT_SHUTDOWN_SIGNAL:
+                        close_socket = True
+                        break
+                    if request == CONSUMER_REQUEST_WORD:
+                        self.logger.info("Received request for new message")
+                        self.logger.info("Fetching from queue")
+                        message = self.queue.fetch_message()
+                        if message == -1:
+                            self.socket.send(EMPTY_QUEUE_MESSAGE)
+                            continue
+                        self.socket.send(message)
+                    else:
+                        self.socket.send(INVALID_PROTOCOL)
+                except Exception:
+                    raise socket.error
+
+        except Exception:
+            self.logger.error("Socket Error. Check the logs to know more")
+            exc_type, exc_val, exc_tb = sys.exc_info()
+            traceback.print_exception(exc_type, exc_val, exc_tb)
+
+        finally:
+            if close_socket:
+                self.logger.info("Closing socket: {} for queue: {}".format(self.socket, self.topic_name))
+                self.socket.close()
+
+            self.logger.info("Killing Consumer Thread for socket: {} and queue: {}".format(
+                self.socket, self.topic_name))
 
 
 class ConnectionThread(threading.Thread):
@@ -269,26 +312,30 @@ class BBMQServer(object):
                                                   self.topics.keys())
         self.connection_thread.start()
 
-    def spawn_producer_thread(self, producer_socket, inbound_socket_address, queue):
+    def spawn_producer_thread(self, producer_socket, inbound_socket_address, queue,
+                              topic_name):
         """
         spawns a producer thread to publish to the queue
         :param inbound_socket_address:
         :param queue:
         :return:
         """
-        producer_thread = ProduerThread(producer_socket, inbound_socket_address, queue)
+        producer_thread = ProduerThread(producer_socket, inbound_socket_address, queue,
+                                        topic_name)
         self.logger.info("Starting producer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
         producer_thread.start()
 
-    def spawn_consumer_thread(self, consumer_socket, inbound_socket_address, queue):
+    def spawn_consumer_thread(self, consumer_socket, inbound_socket_address, queue,
+                              topic_name):
         """
         spawns a consumer thread to subscribe to the queue
         :param inbound_socket_address:
         :param queue:
         :return:
         """
-        consumer_thread = ConsumerThread(consumer_socket, inbound_socket_address, queue)
+        consumer_thread = ConsumerThread(consumer_socket, inbound_socket_address, queue,
+                                         topic_name)
         self.logger.info("Starting consumer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
         consumer_thread.start()
@@ -324,31 +371,13 @@ def main():
         queue = server.get_topic_queue(topic_name=client_topic)
         if client_type == CLIENT_PUBLISHER:
             server.update_topic(client_topic, (client_socket, inbound_socket_address), None)
-            server.spawn_producer_thread(client_socket, inbound_socket_address, queue)
+            server.spawn_producer_thread(client_socket, inbound_socket_address, queue,
+                                         client_topic)
         else:
             server.update_topic(client_topic, None, (client_socket, inbound_socket_address))
-            server.spawn_consumer_thread(client_socket, inbound_socket_address, queue)
+            server.spawn_consumer_thread(client_socket, inbound_socket_address, queue,
+                                         client_topic)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
