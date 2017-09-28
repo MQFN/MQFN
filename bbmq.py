@@ -35,12 +35,9 @@ class BBMQ(object):
         :return:
         """
         if self.is_empty():
-            print "is empty check"
             return -1
         else:
-            print "trying to fetch"
             a = self.queue.get()
-            print "a now:" + str(a)
             return a
 
     def get_queue_size(self):

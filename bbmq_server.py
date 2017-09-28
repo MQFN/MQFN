@@ -26,7 +26,7 @@ import signal
 import settings
 from bbmq import BBMQ
 
-CONNECTION_THREAD_ID = settings.CONNECTION_THREAD_ID
+
 LOG_FILEPATH = settings.LOG_FILEPATH
 LOG_LEVEL = settings.LOG_LEVEL
 SERVER_MAX_QUEUED_CON = settings.SERVER_MAX_QUEUED_CON
@@ -173,7 +173,7 @@ class ConnectionThread(threading.Thread):
     Connection thread will be waiting for connections from producers or consumers
     """
 
-    def __init__(self, threadID, server_socket, connection_queue, topics):
+    def __init__(self, server_socket, connection_queue, topics):
         """
         initialize the thread
         :param server_socket:
@@ -181,7 +181,6 @@ class ConnectionThread(threading.Thread):
         :param topics: list of available topics that clients can publish/subscribe to
         """
         threading.Thread.__init__(self)
-        self.threadID = threadID
         self.logger = logging.getLogger("bbmq_module.RunServer.BBMQServer.ConnectionThread")
         self.sock = server_socket
         self.connection_queue = connection_queue
@@ -330,7 +329,7 @@ class BBMQServer(object):
         :return:
         """
         self.logger.info("Starting connection thread")
-        self.connection_thread = ConnectionThread(0, self.sock, self.connection_queue,
+        self.connection_thread = ConnectionThread(self.sock, self.connection_queue,
                                                   self.topics.keys())
         self.connection_thread.start()
 

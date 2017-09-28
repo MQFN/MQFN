@@ -11,11 +11,13 @@ CLIENT_SHUTDOWN_SIGNAL = settings.CLIENT_SHUTDOWN_SIGNAL
 PORT = settings.PORT
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
+s = socket.socket()
+s.settimeout(2)
+host = socket.gethostname()
+port = PORT
+
+
 def main():
-    s = socket.socket()
-    s.settimeout(2)
-    host = socket.gethostname()
-    port = PORT
 
     client_metadata = {
         "type": CLIENT_PUBLISHER,
@@ -39,7 +41,6 @@ def main():
     while True:
         try:
             message = raw_input("Message to send to queue: ")
-            message = "PROD: " + message
             s.send(message)
             acknowledgement = s.recv(1024)
             if acknowledgement == CLOSE_CONNECTION_SIGNAL:
@@ -53,6 +54,13 @@ def main():
             break
     s.close()
 
+def signal_handler(signal, frame):
+    print "Killing process"
+    s.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 if __name__ == "__main__":
     main()

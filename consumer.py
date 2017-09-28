@@ -2,6 +2,7 @@
 import settings
 import socket
 import sys, os, traceback
+import signal
 
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 CLIENT_SUBSCRIBER = settings.CLIENT_SUBSCRIBER
@@ -11,11 +12,11 @@ PORT = settings.PORT
 MAX_MESSAGE_SIZE = settings.MAX_MESSAGE_SIZE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
-def main():
-    s = socket.socket()
-    host = socket.gethostname()
-    port = PORT
+s = socket.socket()
+host = socket.gethostname()
+port = PORT
 
+def main():
     client_metadata = {
         "type": CLIENT_SUBSCRIBER,
         "topic": "PR_PAYLOADS"
@@ -37,6 +38,15 @@ def main():
             break
         print "Message from queue: " + str(msg)
     s.close()
+
+
+def signal_handler(signal, frame):
+    print "Killing process"
+    s.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 if __name__ == "__main__":
     main()
