@@ -43,7 +43,7 @@ logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("bbmq_module")
 
 
-class ProduerThread(threading.Thread):
+class ProducerThread(threading.Thread):
     """
     Connection thread will be waiting for connections from producers or consumers
     """
@@ -75,8 +75,9 @@ class ProduerThread(threading.Thread):
                     if message == CLIENT_SHUTDOWN_SIGNAL:
                         close_socket = True
                         break
-                    self.logger.info("Received payload")
-                    self.logger.info("Publishing to queue")
+                    # self.logger.info("Received payload")
+                    # self.logger.info("Publishing to queue")
+                    print "Received payload...publishing to queue"
                     self.queue.add_message(message)
                 except Exception:
                     raise socket.error
@@ -320,7 +321,7 @@ class BBMQServer(object):
         :param queue:
         :return:
         """
-        producer_thread = ProduerThread(producer_socket, inbound_socket_address, queue,
+        producer_thread = ProducerThread(producer_socket, inbound_socket_address, queue,
                                         topic_name)
         self.logger.info("Starting producer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
