@@ -13,7 +13,6 @@ Communication between the connection thread and the main thread. It uses a simpl
 
 """
 
-import signal
 import logging
 import sys
 
@@ -23,9 +22,9 @@ from bbmq_server import BBMQServer
 TOPICS = settings.TOPICS
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
+LOG_FILEPATH = settings.LOG_FILEPATH
 
-logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
-
+logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
 
 class Server(object):
 
@@ -94,9 +93,9 @@ class Server(object):
                                              client_topic)
 
 
-def main():
-    server_instance = Server()
-    server_instance.start()
+#def main():
+#    server_instance = Server()
+#    server_instance.start()
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()

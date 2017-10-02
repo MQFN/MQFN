@@ -1,14 +1,16 @@
 import logging
+import os
 
-PORT = 15000
+PORT = 15333
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # LOG_FILEPATH = "/srv/webapps/BBMQ/logs/bbmq.log"
-LOG_FILEPATH = "/home/bigbasket/Desktop/BigBasketForkNew/BBMQ/logs/bbmq.log"
+LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "bbmq.log")
 LOG_LEVEL = logging.DEBUG
 SERVER_MAX_QUEUED_CON = 5
 TOPICS = ["PR_PAYLOADS"]
 CLIENT_PUBLISHER = "PRODUCER"
 CLIENT_SUBSCRIBER = "CONSUMER"
-MAX_MESSAGE_SIZE = 1024
+MAX_MESSAGE_SIZE = 2048
 SERVER_ACKNOWLEDGEMENT = "ROGER"
 CLIENT_SHUTDOWN_SIGNAL = "SHUTDOWN"
 CONSUMER_REQUEST_WORD = "FETCH"
@@ -16,3 +18,5 @@ INVALID_PROTOCOL = "UNKNOWN_WORD"
 EMPTY_QUEUE_MESSAGE = "QUEUE EMPTY"
 PRODUCER_ACK_MESSAGE = "ACKNOWLEDGED"
 CLOSE_CONNECTION_SIGNAL = "CLOSE_CON"
+HELP_INSTRUCTIONS = os.path.join(BASE_DIR, "help_instructions.txt")
+PID_FILEPATH = os.path.join(BASE_DIR, "tmp", "bbmq.pid")

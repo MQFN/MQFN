@@ -1,0 +1,12 @@
+Usage:
+    ./server_daemon.py [OPTIONS] [COMMAND]
+
+options:
+
+    --help: Show help
+    --port: Specify the port number. It is required for port numbers to be between 10000 and 20000
+
+commands:
+    start: start the server with the port configured in the settings file
+    stop: stop the server
+    status: show the status of the server

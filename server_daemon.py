@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from service import Service
+from server import Server
+
+import logging
+import sys
+
+import settings
+from bbmq_server import BBMQServer
+
+HELP_INSTRUCTIONS = settings.HELP_INSTRUCTIONS
+TOPICS = settings.TOPICS
+CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
+LOG_LEVEL = settings.LOG_LEVEL
+LOG_FILEPATH = settings.LOG_FILEPATH
+PID_FILEPATH = settings.PID_FILEPATH
+
+# logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
+logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+
+class BBMQService(Service):
+    def __init__(self, *args, **kwargs):
+        super(BBMQService, self).__init__(*args, **kwargs)
+        self.server_instance = Server()
+
+    def run(self):
+        self.server_instance.start()
+
+def show_help():
+    f = open(HELP_INSTRUCTIONS, "r")
+    a = f.read()
+    f.close()
+    print a
+
+def main():
+    service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+
+    if len(sys.argv) == 1:
+        show_help()
+        sys.exit(0)
+
+    if len(sys.argv) > 4:
+        show_help()
+        sys.exit(0)
+
+    if len(sys.argv) == 4:
+        if sys.argv[1] == "--port":
+            try:
+                port = int(sys.argv[2])
+                if not (port>10000 and port<20000):
+                    show_help()
+                    sys.exit(0)
+                cmd = sys.argv[3]
+                if cmd == "start":
+                    # start the server
+                    settings.PORT = port
+                    service.start()
+                else:
+                    show_help()
+                    sys.exit(0)
+            except Exception:
+                show_help()
+                sys.exit(0)
+        else:
+            show_help()
+            sys.exit(0)
+
+    elif len(sys.argv) == 2:
+        try:
+            cmd = sys.argv[1]
+            if cmd == "start":
+                service.start()
+            elif cmd == "stop":
+                service.stop()
+            elif cmd == "status":
+                if service.is_running():
+                    print "bbmq_server is running"
+                else:
+                    print "bbmq_server is not running"
+            else:
+                show_help()
+                sys.exit(0)
+
+        except Exception:
+            show_help()
+            sys.exit(0)
+
+    else:
+        show_help()
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
