@@ -9,4 +9,5 @@ options:
 commands:
     start: start the server with the port configured in the settings file
     stop: stop the server
+    kill: kill the server
     status: show the status of the server

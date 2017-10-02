@@ -5,10 +5,9 @@ from service import Service
 from server import Server
 
 import logging
-import sys
+import sys, traceback
 
 import settings
-from bbmq_server import BBMQServer
 
 HELP_INSTRUCTIONS = settings.HELP_INSTRUCTIONS
 TOPICS = settings.TOPICS
@@ -19,14 +18,20 @@ PID_FILEPATH = settings.PID_FILEPATH
 
 # logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logger = logging.getLogger("server_daemon")
+
 
 class BBMQService(Service):
     def __init__(self, *args, **kwargs):
         super(BBMQService, self).__init__(*args, **kwargs)
         self.server_instance = Server()
+        self.logger = logger
 
     def run(self):
-        self.server_instance.start()
+        self.logger.info("Running the server as a daemon")
+        while not self.got_sigterm():
+            self.server_instance.start()
+
 
 def show_help():
     f = open(HELP_INSTRUCTIONS, "r")
@@ -34,7 +39,7 @@ def show_help():
     f.close()
     print a
 
-def main():
+if __name__ == "__main__":
     service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
 
     if len(sys.argv) == 1:
@@ -55,7 +60,7 @@ def main():
                 cmd = sys.argv[3]
                 if cmd == "start":
                     # start the server
-                    settings.PORT = port
+                        settings.PORT = port
                     service.start()
                 else:
                     show_help()
@@ -74,6 +79,8 @@ def main():
                 service.start()
             elif cmd == "stop":
                 service.stop()
+            elif cmd == "kill":
+                service.kill()
             elif cmd == "status":
                 if service.is_running():
                     print "bbmq_server is running"
@@ -84,13 +91,11 @@ def main():
                 sys.exit(0)
 
         except Exception:
+            exc_type, exc_val, exc_tb = sys.exc_info()
+            traceback.print_exception(exc_type, exc_val, exc_tb)
             show_help()
             sys.exit(0)
 
     else:
         show_help()
         sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()

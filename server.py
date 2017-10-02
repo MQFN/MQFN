@@ -25,6 +25,7 @@ LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 
 logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+# logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 
 class Server(object):
 
@@ -34,7 +35,7 @@ class Server(object):
         """
         self.server = BBMQServer()
         self.logger = logging.getLogger("bbmq_module.Server")
-        self.logger.info("Initializing BBMQ server")
+        self.logger.debug("Initializing BBMQ server")
 
     def start(self):
         """
@@ -93,9 +94,9 @@ class Server(object):
                                              client_topic)
 
 
-#def main():
+# def main():
 #    server_instance = Server()
 #    server_instance.start()
-
-#if __name__ == "__main__":
+#
+# if __name__ == "__main__":
 #    main()

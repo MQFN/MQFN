@@ -19,4 +19,4 @@ EMPTY_QUEUE_MESSAGE = "QUEUE EMPTY"
 PRODUCER_ACK_MESSAGE = "ACKNOWLEDGED"
 CLOSE_CONNECTION_SIGNAL = "CLOSE_CON"
 HELP_INSTRUCTIONS = os.path.join(BASE_DIR, "help_instructions.txt")
-PID_FILEPATH = os.path.join(BASE_DIR, "tmp", "bbmq.pid")
+PID_FILEPATH = os.path.join(BASE_DIR, "tmp")
