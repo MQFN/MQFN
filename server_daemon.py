@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 cmd = sys.argv[3]
                 if cmd == "start":
                     # start the server
-                        settings.PORT = port
+                    settings.PORT = port
                     service.start()
                 else:
                     show_help()

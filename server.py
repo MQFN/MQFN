@@ -24,8 +24,8 @@ CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 
-logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
-# logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
+# logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 
 class Server(object):
 
@@ -94,9 +94,9 @@ class Server(object):
                                              client_topic)
 
 
-# def main():
-#    server_instance = Server()
-#    server_instance.start()
-#
-# if __name__ == "__main__":
-#    main()
+def main():
+   server_instance = Server()
+   server_instance.start()
+
+if __name__ == "__main__":
+   main()

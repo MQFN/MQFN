@@ -42,8 +42,8 @@ EMPTY_QUEUE_MESSAGE = settings.EMPTY_QUEUE_MESSAGE
 PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
-logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
-# logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
+# logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("bbmq_module")
 
 
@@ -76,6 +76,8 @@ class ProducerThread(threading.Thread):
         try:
             while True:
                 try:
+                    # TODO: Reduce buffer size (MAX_MESSAGE_SIZE) and receive data in chunks and
+                    # TODO: store them in one block in the queue.
                     message = self.socket.recv(MAX_MESSAGE_SIZE)
                     if message == CLIENT_SHUTDOWN_SIGNAL:
                         self.socket.send(CLOSE_CONNECTION_SIGNAL)
@@ -144,10 +146,7 @@ class ConsumerThread(threading.Thread):
                     if request == CONSUMER_REQUEST_WORD:
                         self.logger.info("Received request for new message")
                         self.logger.info("Fetching from queue")
-                        message = self.queue.fetch_message()
-                        if message == -1:
-                            self.socket.send(EMPTY_QUEUE_MESSAGE)
-                            continue
+                        message = self.queue.fetch_message(block=True)
                         self.socket.send(message)
                     else:
                         self.socket.send(INVALID_PROTOCOL)

@@ -29,16 +29,20 @@ class BBMQ(object):
         """
         return self.queue.empty()
 
-    def fetch_message(self):
+    def fetch_message(self, block=False):
         """
         fetches first message from queue, following FIFO
         :return:
         """
-        if self.is_empty():
-            return -1
-        else:
-            a = self.queue.get()
+        if block:
+            a = self.queue.get(block=True)
             return a
+        else:
+            if self.is_empty():
+                return -1
+            else:
+                a = self.queue.get()
+                return a
 
     def get_queue_size(self):
         """
