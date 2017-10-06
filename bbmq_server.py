@@ -103,19 +103,11 @@ class ProducerThread(threading.Thread):
             self.logger.info("Killing Producer Thread for socket: {} and queue: {}".format(
                 self.socket, self.topic_name))
 
-    def join(self):
-        """
-
-        :return:
-        """
-
-
 
 class ConsumerThread(threading.Thread):
     """
     Connection thread will be waiting for connections from producers or consumers
     """
-
     def __init__(self, consumer_socket, inbound_socket_address, queue, topic_name):
         """
         initialize the thread
@@ -275,6 +267,12 @@ class BBMQServer(object):
         self.topics = {}
         self.connection_thread = None
         self.connection_queue = Queue.Queue()
+        # store the instances of all the threads.
+        self.all_client_threads = {
+            "connection_threads":[],
+            "producer_threads": [],
+            "consumer_threads": []
+        }
 
     def create_topic(self, topic_name):
         """
@@ -332,6 +330,7 @@ class BBMQServer(object):
         self.logger.info("Starting connection thread")
         self.connection_thread = ConnectionThread(self.sock, self.connection_queue,
                                                   self.topics.keys())
+        self.all_client_threads["connection_threads"].append(self.connection_thread)
         self.connection_thread.start()
 
     def spawn_producer_thread(self, producer_socket, inbound_socket_address, queue,
@@ -346,6 +345,7 @@ class BBMQServer(object):
                                         topic_name)
         self.logger.info("Starting producer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
+        self.all_client_threads["producer_threads"].append(producer_thread)
         producer_thread.start()
 
     def spawn_consumer_thread(self, consumer_socket, inbound_socket_address, queue,
@@ -360,6 +360,7 @@ class BBMQServer(object):
                                          topic_name)
         self.logger.info("Starting consumer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
+        self.all_client_threads["consumer_threads"].append(consumer_thread)
         consumer_thread.start()
 
     def join_connection_thread(self):
