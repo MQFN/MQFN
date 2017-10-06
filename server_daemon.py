@@ -17,6 +17,7 @@ LOG_FILEPATH = settings.LOG_FILEPATH
 PID_FILEPATH = settings.PID_FILEPATH
 
 logging.config.dictConfig(settings.LOGGING)
+logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("server_daemon_console_logger")
 
 

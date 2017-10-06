@@ -14,7 +14,7 @@ Communication between the connection thread and the main thread. It uses a simpl
 """
 
 import socket
-import logging
+import logging, logging.config
 import threading
 import sys, os
 import ast
@@ -42,9 +42,9 @@ EMPTY_QUEUE_MESSAGE = settings.EMPTY_QUEUE_MESSAGE
 PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
-# logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logging.config.dictConfig(settings.LOGGING)
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
-logger = logging.getLogger("bbmq_module")
+logger = logging.getLogger("bbmq_server_module")
 
 
 class ProducerThread(threading.Thread):
@@ -61,7 +61,8 @@ class ProducerThread(threading.Thread):
         :param topic_name:
         """
         threading.Thread.__init__(self)
-        self.logger = logging.getLogger("bbmq_module.Server.BBMQServer.ProducerThread_".format(
+        self.logger = logging.getLogger("ProducerThread")
+        self.logger.info("Initializing Producer Thread for socket adddress: {}".format(
             inbound_socket_address))
         self.socket = producer_socket
         self.queue = queue
@@ -124,7 +125,8 @@ class ConsumerThread(threading.Thread):
         :param topic_name:
         """
         threading.Thread.__init__(self)
-        self.logger = logging.getLogger("bbmq_module.Server.BBMQServer.ConsumerThread_".format(
+        self.logger = logging.getLogger("ConsumerThread")
+        self.logger.info("Initializing Consumer Thread for socket address: {}".format(
             inbound_socket_address))
         self.socket = consumer_socket
         self.queue = queue
@@ -180,7 +182,7 @@ class ConnectionThread(threading.Thread):
         :param topics: list of available topics that clients can publish/subscribe to
         """
         threading.Thread.__init__(self)
-        self.logger = logging.getLogger("bbmq_module.Server.BBMQServer.ConnectionThread")
+        self.logger = logging.getLogger("ConnectionThread")
         self.sock = server_socket
         self.connection_queue = connection_queue
         self.topics = topics
@@ -264,7 +266,7 @@ class BBMQServer(object):
         initialize the instance of BBMQ. create the socket, bind the hostname and port with
         the socket and listen for the connections to the socket
         """
-        self.logger = logging.getLogger("bbmq_module.Server.BBMQServer")
+        self.logger = logging.getLogger("BBMQServer")
         self.sock = socket.socket()
         self.hostname = socket.gethostname()
         self.port = settings.PORT

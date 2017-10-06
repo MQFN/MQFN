@@ -13,7 +13,7 @@ Communication between the connection thread and the main thread. It uses a simpl
 
 """
 
-import logging
+import logging, logging.config
 import sys
 
 import settings
@@ -24,7 +24,7 @@ CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 
-# logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+logging.config.dictConfig(settings.LOGGING)
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 
 class Server(object):
@@ -34,7 +34,7 @@ class Server(object):
         Run an instance of the BBMQ server
         """
         self.server = BBMQServer()
-        self.logger = logging.getLogger("bbmq_module.Server")
+        self.logger = logging.getLogger("Server")
         self.logger.debug("Initializing BBMQ server")
 
     def start(self):

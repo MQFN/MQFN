@@ -54,6 +54,30 @@ LOGGING = {
         'server_daemon_console_logger': {
             'handlers': ['console'],
             'propagate': False
+        },
+        'bbmq_server_module':{
+            'handlers': ['console'],
+            'propagate': False
+        },
+        'Server': {
+            'handlers': ['console'],
+            'propagate': False
+        },
+        'BBMQServer': {
+            'handlers': ['console'],
+            'propagate': False
+        },
+        'ProducerThread': {
+            'handlers': ['console'],
+            'propagate': False
+        },
+        'ConsumerThread': {
+            'handlers': ['console'],
+            'propagate': False
+        },
+        'ConnectionThread': {
+            'handlers': ['console'],
+            'propagate': False
         }
     }
 }

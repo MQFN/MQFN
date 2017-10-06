@@ -1,21 +1,55 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
-from logging.handlers import SysLogHandler
+import logging, logging.config
 import time
 import os
 import settings
+import sys
 
-log_path = os.path.join(os.path.dirname(settings.LOG_FILEPATH), "test_service.log")
-from service import find_syslog, Service
+from service import Service
+LOG_FILEPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_log.log")
+
+LOGGING = {
+'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': LOG_FILEPATH,
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'test_service': {
+            'handlers': ['file'],
+            'propagate': False
+        }
+    }
+}
+logging.config.dictConfig(LOGGING)
+logging.basicConfig(filename=LOG_FILEPATH, level=logging.DEBUG)
+
 
 class MyService(Service):
+
     def __init__(self, *args, **kwargs):
         super(MyService, self).__init__(*args, **kwargs)
-        self.logger.addHandler(SysLogHandler(address=log_path,
-                               facility=SysLogHandler.LOG_DAEMON))
-        self.logger.setLevel(logging.INFO)
+        self.logger = logging.getLogger("test_service")
 
     def run(self):
         while not self.got_sigterm():
