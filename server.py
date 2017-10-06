@@ -17,6 +17,7 @@ import logging, logging.config
 import sys
 
 import settings
+import signal
 from bbmq_server import BBMQServer
 
 TOPICS = settings.TOPICS
@@ -26,6 +27,16 @@ LOG_FILEPATH = settings.LOG_FILEPATH
 
 logging.config.dictConfig(settings.LOGGING)
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
+
+
+def signal_handler(signal, frame):
+    """
+    handle the signals sent to the process
+    :param signal:
+    :param frame:
+    :return:
+    """
+
 
 class Server(object):
 
@@ -95,8 +106,8 @@ class Server(object):
 
 
 def main():
-   server_instance = Server()
-   server_instance.start()
+    server_instance = Server()
+    server_instance.start()
 
 if __name__ == "__main__":
-   main()
+    main()

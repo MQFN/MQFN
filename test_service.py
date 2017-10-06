@@ -54,7 +54,7 @@ class MyService(Service):
     def run(self):
         while not self.got_sigterm():
             self.logger.info("I'm working...")
-            time.sleep(5)
+            time.sleep(1)
 
 if __name__ == '__main__':
     import sys

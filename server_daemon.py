@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from service import Service
 from server import Server
 
 import logging, logging.config
-import sys, traceback
+import sys, traceback, signal, os
+import daemon
 
 import settings
 
@@ -15,22 +15,89 @@ CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 PID_FILEPATH = settings.PID_FILEPATH
+BASE_DIR = settings.BASE_DIR
+PID_FILENAME = settings.PID_FILENAME
 
 logging.config.dictConfig(settings.LOGGING)
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("server_daemon_console_logger")
 
 
-class BBMQService(Service):
-    def __init__(self, *args, **kwargs):
-        super(BBMQService, self).__init__(*args, **kwargs)
-        self.server_instance = Server()
+class Service(object):
+
+    def __init__(self):
         self.logger = logger
 
+    def is_running(self):
+        """
+        checks the pid location to find if there is any pid already available, if so silently dies
+        showing an error message
+        :return:
+        """
+        pid_loc = os.listdir(PID_FILEPATH)
+        if PID_FILENAME in pid_loc:
+            return True
+        return False
+
+    def prepare_for_daemonizing_process(self):
+        """
+        Stores pid in specific locations to prepare the process for daemonizing
+        :return:
+        """
+        self.logger.debug("Preparing for daemonizing process")
+        pid = os.getpid()
+        f = open(os.path.join(PID_FILEPATH, PID_FILENAME), "w")
+        f.write(str(pid))
+        f.close()
+
+    def start(self):
+        """
+        Starts the server
+        :return:
+        """
+        # it is assumed that the service is not running, checking for already present service must
+        # be done before hand.
+        self.logger.info("Starting the server")
+        self.run()
+
     def run(self):
-        self.logger.info("Running the server as a daemon")
-        while not self.got_sigterm():
-            self.server_instance.start()
+        """
+        run the process as a daemon
+        :return:
+        """
+        with daemon.DaemonContext():
+            # the pid has to be stored inside the daemon because the daemon actually spawns a
+            #  different process
+            self.prepare_for_daemonizing_process()
+            server_instance = Server()
+            server_instance.start()
+
+    def stop(self):
+        """
+        stops the process. A sigterm is sent to the process to stop it
+        :return:
+        """
+        # it is assumed that the process is already running and must be stopped
+        self.logger.info("Stopping bbmq")
+        f = open(os.path.join(PID_FILEPATH, PID_FILENAME), "r")
+        pid = f.read()
+        f.close()
+        os.remove(os.path.join(PID_FILEPATH, PID_FILENAME))
+        os.system("kill {}".format(str(pid)))
+        self.logger.info("Stopped")
+
+    def kill(self):
+        """
+        sends a kill signal (-9) to the process
+        :return:
+        """
+        self.logger.info("Killing bbmq")
+        f = open(os.path.join(PID_FILEPATH, PID_FILENAME), "r")
+        pid = f.read()
+        f.close()
+        os.remove(os.path.join(PID_FILEPATH, PID_FILENAME))
+        os.system("kill -9 {}".format(str(pid)))
+        self.logger.info("Killed")
 
 
 def show_help():
@@ -60,8 +127,12 @@ if __name__ == "__main__":
                 if cmd == "start":
                     # start the server
                     settings.PORT = port
-                    service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
-                    service.start()
+                    service = Service()
+                    if not service.is_running():
+                        service.start()
+                    else:
+                        logger.info("bbmq is already running")
+                        sys.exit(0)
                 else:
                     show_help()
                     sys.exit(0)
@@ -76,26 +147,34 @@ if __name__ == "__main__":
         try:
             cmd = sys.argv[1]
             if cmd == "start":
-                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
-                service.start()
+                service = Service()
+                if not service.is_running():
+                    service.start()
+                else:
+                    logger.info("bbmq is already running")
+                    sys.exit(0)
             elif cmd == "stop":
-                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+                service = Service()
                 if service.is_running():
                     service.stop()
                 else:
-                    logger.info("Service is not running")
+                    logger.info("bbmq is not running")
+                    sys.exit(0)
             elif cmd == "kill":
-                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+                service = Service()
                 if service.is_running():
                     service.kill()
                 else:
-                    logger.info("Service is not running")
+                    logger.info("bbmq is not running")
+                    sys.exit(0)
             elif cmd == "status":
-                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+                service = Service()
                 if service.is_running():
-                    print "bbmq_server is running"
+                    logger.info("bbmq is running")
+                    sys.exit(0)
                 else:
-                    print "bbmq_server is not running"
+                    logger.info("bbmq is not running")
+                    sys.exit(0)
             else:
                 show_help()
                 sys.exit(0)

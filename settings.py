@@ -19,8 +19,17 @@ EMPTY_QUEUE_MESSAGE = "QUEUE EMPTY"
 PRODUCER_ACK_MESSAGE = "ACKNOWLEDGED"
 CLOSE_CONNECTION_SIGNAL = "CLOSE_CON"
 HELP_INSTRUCTIONS = os.path.join(BASE_DIR, "help_instructions.txt")
-PID_FILEPATH = os.path.join(BASE_DIR, "tmp")
+PID_FILEPATH = os.path.join(BASE_DIR, "pid")
+PID_FILENAME = "bbmq.pid"
 
+# confirm pid filepath location and log filepath location, if tmp is not found, create a tmp
+#  directory in the base dir
+dirs = os.listdir(BASE_DIR)
+if "pid" not in dirs:
+    os.mkdir(PID_FILEPATH)
+
+if "logs" not in dirs:
+    os.mkdir(LOG_FILEPATH)
 
 LOGGING = {
     'version': 1,
