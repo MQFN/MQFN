@@ -20,3 +20,40 @@ PRODUCER_ACK_MESSAGE = "ACKNOWLEDGED"
 CLOSE_CONNECTION_SIGNAL = "CLOSE_CON"
 HELP_INSTRUCTIONS = os.path.join(BASE_DIR, "help_instructions.txt")
 PID_FILEPATH = os.path.join(BASE_DIR, "tmp")
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': LOG_FILEPATH,
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'server_daemon': {
+            'handlers': ['file'],
+            'propagate': False
+        },
+        'server_daemon_console_logger': {
+            'handlers': ['console'],
+            'propagate': False
+        }
+    }
+}

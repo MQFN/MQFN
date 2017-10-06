@@ -4,7 +4,7 @@
 from service import Service
 from server import Server
 
-import logging
+import logging, logging.config
 import sys, traceback
 
 import settings
@@ -16,9 +16,8 @@ LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 PID_FILEPATH = settings.PID_FILEPATH
 
-# logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
-logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
-logger = logging.getLogger("server_daemon")
+logging.config.dictConfig(settings.LOGGING)
+logger = logging.getLogger("server_daemon_console_logger")
 
 
 class BBMQService(Service):
@@ -37,10 +36,9 @@ def show_help():
     f = open(HELP_INSTRUCTIONS, "r")
     a = f.read()
     f.close()
-    print a
+    logger.info("\n" + a)
 
 if __name__ == "__main__":
-    service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
 
     if len(sys.argv) == 1:
         show_help()
@@ -61,6 +59,7 @@ if __name__ == "__main__":
                 if cmd == "start":
                     # start the server
                     settings.PORT = port
+                    service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
                     service.start()
                 else:
                     show_help()
@@ -76,12 +75,22 @@ if __name__ == "__main__":
         try:
             cmd = sys.argv[1]
             if cmd == "start":
+                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
                 service.start()
             elif cmd == "stop":
-                service.stop()
+                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+                if service.is_running():
+                    service.stop()
+                else:
+                    logger.info("Service is not running")
             elif cmd == "kill":
-                service.kill()
+                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
+                if service.is_running():
+                    service.kill()
+                else:
+                    logger.info("Service is not running")
             elif cmd == "status":
+                service = BBMQService('bbmq_server', pid_dir=PID_FILEPATH)
                 if service.is_running():
                     print "bbmq_server is running"
                 else:
