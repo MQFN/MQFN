@@ -43,7 +43,6 @@ PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
 logging.config.dictConfig(settings.LOGGING)
-logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("bbmq_server_module")
 
 

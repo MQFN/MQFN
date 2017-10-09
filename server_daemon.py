@@ -18,8 +18,8 @@ PID_FILEPATH = settings.PID_FILEPATH
 BASE_DIR = settings.BASE_DIR
 PID_FILENAME = settings.PID_FILENAME
 
+logging.basicConfig(filename=LOG_FILEPATH, stream=sys.stdout ,level=LOG_LEVEL)
 logging.config.dictConfig(settings.LOGGING)
-logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 logger = logging.getLogger("server_daemon_console_logger")
 
 
@@ -68,6 +68,8 @@ class Service(object):
         with daemon.DaemonContext():
             # the pid has to be stored inside the daemon because the daemon actually spawns a
             #  different process
+
+            # The daemon context must have a separate logging.basicConfig and that is crucial.
             self.prepare_for_daemonizing_process()
             server_instance = Server()
             server_instance.start()

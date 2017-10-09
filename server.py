@@ -26,7 +26,7 @@ LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 
 logging.config.dictConfig(settings.LOGGING)
-logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
+logger = logging.getLogger("Server")
 
 
 def signal_handler(signal, frame):
@@ -36,6 +36,7 @@ def signal_handler(signal, frame):
     :param frame:
     :return:
     """
+    pass
 
 
 class Server(object):
@@ -45,7 +46,7 @@ class Server(object):
         Run an instance of the BBMQ server
         """
         self.server = BBMQServer()
-        self.logger = logging.getLogger("Server")
+        self.logger = logger
         self.logger.debug("Initializing BBMQ server")
 
     def start(self):

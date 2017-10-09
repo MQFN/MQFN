@@ -65,27 +65,27 @@ LOGGING = {
             'propagate': False
         },
         'bbmq_server_module':{
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         },
         'Server': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         },
         'BBMQServer': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         },
         'ProducerThread': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         },
         'ConsumerThread': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         },
         'ConnectionThread': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'propagate': False
         }
     }
