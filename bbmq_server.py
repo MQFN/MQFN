@@ -61,7 +61,7 @@ class ProducerThread(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.logger = logging.getLogger("ProducerThread")
-        self.logger.info("Initializing Producer Thread for socket adddress: {}".format(
+        self.logger.debug("Initializing Producer Thread for socket adddress: {}".format(
             inbound_socket_address))
         self.socket = producer_socket
         self.queue = queue
@@ -82,8 +82,8 @@ class ProducerThread(threading.Thread):
                     if message == CLIENT_SHUTDOWN_SIGNAL:
                         self.socket.send(CLOSE_CONNECTION_SIGNAL)
                         break
-                    self.logger.info("Received payload")
-                    self.logger.info("Publishing to queue")
+                    self.logger.debug("Received payload")
+                    self.logger.debug("Publishing to queue")
                     self.queue.add_message(message)
                     self.socket.send(PRODUCER_ACK_MESSAGE)
                 except Exception:
@@ -117,7 +117,7 @@ class ConsumerThread(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.logger = logging.getLogger("ConsumerThread")
-        self.logger.info("Initializing Consumer Thread for socket address: {}".format(
+        self.logger.debug("Initializing Consumer Thread for socket address: {}".format(
             inbound_socket_address))
         self.socket = consumer_socket
         self.queue = queue
@@ -137,8 +137,8 @@ class ConsumerThread(threading.Thread):
                         self.socket.send(CLOSE_CONNECTION_SIGNAL)
                         break
                     if request == CONSUMER_REQUEST_WORD:
-                        self.logger.info("Received request for new message")
-                        self.logger.info("Fetching from queue")
+                        self.logger.debug("Received request for new message")
+                        self.logger.debug("Fetching from queue")
                         message = self.queue.fetch_message(block=True)
                         self.socket.send(message)
                     else:
@@ -326,7 +326,7 @@ class BBMQServer(object):
         consumers
         :return:
         """
-        self.logger.info("Starting connection thread")
+        self.logger.debug("Starting connection thread")
         self.connection_thread = ConnectionThread(self.sock, self.connection_queue,
                                                   self.topics.keys())
         self.all_client_threads["connection_threads"].append(self.connection_thread)
@@ -342,7 +342,7 @@ class BBMQServer(object):
         """
         producer_thread = ProducerThread(producer_socket, inbound_socket_address, queue,
                                         topic_name)
-        self.logger.info("Starting producer thread for socket: {} and queue: {}".format(
+        self.logger.debug("Starting producer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
         self.all_client_threads["producer_threads"].append(producer_thread)
         producer_thread.start()
@@ -357,7 +357,7 @@ class BBMQServer(object):
         """
         consumer_thread = ConsumerThread(consumer_socket, inbound_socket_address, queue,
                                          topic_name)
-        self.logger.info("Starting consumer thread for socket: {} and queue: {}".format(
+        self.logger.debug("Starting consumer thread for socket: {} and queue: {}".format(
             inbound_socket_address, queue))
         self.all_client_threads["consumer_threads"].append(consumer_thread)
         consumer_thread.start()
@@ -367,5 +367,5 @@ class BBMQServer(object):
         join the connection thread
         :return:
         """
-        self.logger.info("Joining Connection thread")
+        self.logger.debug("Joining Connection thread")
         self.connection_thread.join()

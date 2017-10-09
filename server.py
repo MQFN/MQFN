@@ -82,7 +82,7 @@ class Server(object):
             self.server.topics[topic]["queue"] = queue
             self.logger.info("Created queue for topic: {}".format(topic))
 
-        self.logger.info("Spawning connection thread")
+        self.logger.debug("Spawning connection thread")
         self.server.spawn_connection_thread()
         while True:
             connection = self.server.connection_queue.get(block=True)
