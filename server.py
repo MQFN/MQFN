@@ -25,8 +25,7 @@ CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
 
-logging.config.dictConfig(settings.LOGGING)
-logger = logging.getLogger("Server")
+
 
 
 def signal_handler(signal, frame):
@@ -45,6 +44,9 @@ class Server(object):
         """
         Run an instance of the BBMQ server
         """
+        logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
+        logging.config.dictConfig(settings.LOGGING)
+        logger = logging.getLogger("Server")
         self.server = BBMQServer()
         self.logger = logger
         self.logger.debug("Initializing BBMQ server")

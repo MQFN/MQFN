@@ -18,7 +18,7 @@ PID_FILEPATH = settings.PID_FILEPATH
 BASE_DIR = settings.BASE_DIR
 PID_FILENAME = settings.PID_FILENAME
 
-logging.basicConfig(filename=LOG_FILEPATH, stream=sys.stdout ,level=LOG_LEVEL)
+logging.basicConfig(stream=sys.stdout ,level=LOG_LEVEL)
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger("server_daemon_console_logger")
 
