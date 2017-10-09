@@ -29,7 +29,7 @@ if "pid" not in dirs:
     os.mkdir(PID_FILEPATH)
 
 if "logs" not in dirs:
-    os.mkdir(LOG_FILEPATH)
+    os.mkdir(os.path.dirname(LOG_FILEPATH))
 
 LOGGING = {
     'version': 1,
