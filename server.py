@@ -3,14 +3,12 @@
 
 """
 The BBMQ server is required to accept 2 connections. one from the producer and one from the consumer.
-
-Each topic will have one queue. Topic is an abstraction basically for a queue. The name 'Topic' is inspired from apache kafka
-
+Each topic will have one queue. Topic is an abstraction basically for a queue. 
+The name 'Topic' is inspired from apache kafka
 Producer: Publisher of the messages
 Consumer: Subscriber of the messages
 
 Communication between the connection thread and the main thread. It uses a simple queue for communication purposes. Whenever a new connection is established, its details will be stored in the queue, for whatever number of new connections
-
 """
 
 import logging, logging.config
