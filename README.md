@@ -10,7 +10,8 @@ In case of large scale web applications, the web server should not ideally handl
 
 ### Instructions for running without Docker:
 `pip install -r requirements.txt` into a virtualenv
-`./server.py start` to start the server
+`pip install -e .` to install the package bbmq
+`bbmq start` to start the server
 `./producer.py` to start the producer
 `.consumer.py` to start the consumer
 
