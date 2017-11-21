@@ -10,6 +10,10 @@ SERVER_MAX_QUEUED_CON = 5
 TOPICS = ["PR_PAYLOADS"]
 CLIENT_PUBLISHER = "PRODUCER"
 CLIENT_SUBSCRIBER = "CONSUMER"
+
+# TODO: Reduce the size of the MAX_MESSAGE_SIZE, as the ideal way to transfer messages would be to send
+# TODO: messages in smaller packets and assimilate them in the receiver end.
+
 MAX_MESSAGE_SIZE = 65536
 SERVER_ACKNOWLEDGEMENT = "ROGER"
 CLIENT_SHUTDOWN_SIGNAL = "SHUTDOWN"
