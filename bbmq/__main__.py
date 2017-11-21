@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from server import Server
+import sys, os
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from server.server import Server
 import logging, logging.config
-import sys, traceback, signal, os
+import traceback, signal
 import daemon
 
 import settings
@@ -85,7 +88,10 @@ class Service(object):
         pid = f.read()
         f.close()
         os.remove(os.path.join(PID_FILEPATH, PID_FILENAME))
-        os.system("kill {}".format(str(pid)))
+
+        # The default signal SIGTERM does not work in killing the process. The process must be killed only with -9
+
+        os.system("kill -9 {}".format(str(pid)))
         self.logger.info("Stopped")
 
     def kill(self):
@@ -108,8 +114,13 @@ def show_help():
     f.close()
     logger.info("\n" + a)
 
-if __name__ == "__main__":
 
+def main(args=None):
+    """
+    Main routine
+    :param args:
+    :return:
+    """
     if len(sys.argv) == 1:
         show_help()
         sys.exit(0)
@@ -190,3 +201,6 @@ if __name__ == "__main__":
     else:
         show_help()
         sys.exit(0)
+
+if __name__ == "__main__":
+    main()

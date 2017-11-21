@@ -23,6 +23,8 @@ import Queue
 import signal
 
 # --------------------------Custom imports------------------------------------------
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import settings
 from bbmq import BBMQ
 

@@ -12,7 +12,9 @@ Communication between the connection thread and the main thread. It uses a simpl
 """
 
 import logging, logging.config
-import sys
+import sys, os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import settings
 import signal
