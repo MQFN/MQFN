@@ -1,4 +1,5 @@
 # MQFN
+[![Build Status](https://travis-ci.org/MQFN/MQFN.svg?branch=master)](https://travis-ci.org/MQFN/MQFN)
 Message Queuing for Noobs
 
 ### Message Queuing
