@@ -31,7 +31,9 @@ class BBMQ(object):
 
     def fetch_message(self, block=False):
         """
-        fetches first message from queue, following FIFO
+        fetches first message from queue, following FIFO.
+        If block=True the get method of the Queue object will have a blocking function call such that
+        if the the queue does not have any messages it will wait for messages to arrive
         :return:
         """
         if block:

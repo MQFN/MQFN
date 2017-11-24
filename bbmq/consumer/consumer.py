@@ -35,7 +35,13 @@ def main():
     print "Start com: Enter SHUTDOWN to stop com"
     while True:
         message = raw_input("Enter FETCH to fetch message: ")
+
+
+
         s.send(message)
+
+
+
         msg = s.recv(MAX_MESSAGE_SIZE)
         if msg == CLOSE_CONNECTION_SIGNAL:
             print "closing con"
