@@ -44,6 +44,11 @@ EMPTY_QUEUE_MESSAGE = settings.EMPTY_QUEUE_MESSAGE
 PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 
+HEAD = settings.HEAD
+TAIL = settings.TAIL
+
+PARTITION_SIZE = settings.PARTITION_SIZE
+
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger("bbmq_server_module")
 
@@ -76,18 +81,50 @@ class ProducerThread(threading.Thread):
         :return:
         """
         try:
+            msg_body = []
             while True:
                 try:
-                    # TODO: Reduce buffer size (MAX_MESSAGE_SIZE) and receive data in chunks and
-                    # TODO: store them in one block in the queue.
-                    message = self.socket.recv(MAX_MESSAGE_SIZE)
-                    if message == CLIENT_SHUTDOWN_SIGNAL:
-                        self.socket.send(CLOSE_CONNECTION_SIGNAL)
-                        break
-                    self.logger.debug("Received payload")
-                    self.logger.debug("Publishing to queue")
-                    self.queue.add_message(message)
-                    self.socket.send(PRODUCER_ACK_MESSAGE)
+
+                    while True:
+                        msg = self.socket.recv(PARTITION_SIZE)
+                        if msg == HEAD:
+                            # empty msg_body
+                            msg_body[:] = []
+                            self.logger.debug("HEAD received for message")
+                        if msg == TAIL:
+                            self.logger.debug("TAIL received for message")
+                            break
+                        else:
+                            msg_body.append(msg)
+
+                    if len(msg_body) == 1:
+                        if msg_body[0] == CLIENT_SHUTDOWN_SIGNAL:
+                            logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
+                            logger.info("Closing the connection with the producer")
+                            self.socket.send(CLOSE_CONNECTION_SIGNAL)
+                            break
+                        else:
+                            self.logger.debug("Received payload")
+                            self.logger.debug("Publishing to queue")
+                            self.logger.debug("Adding HEAD to message")
+                            self.queue.add_message(HEAD)
+                            self.queue.add_message(msg_body[0])
+                            self.logger.debug("Adding TAIL to message")
+                            self.queue.add_message(TAIL)
+                    else:
+                        self.logger.debug("Received payload")
+                        self.logger.debug("Publishing to queue")
+
+                        self.logger.debug("Adding HEAD to message")
+                        self.queue.add_message(HEAD)
+                        for packet in msg_body:
+                            self.queue.add_message(packet)
+
+                        self.logger.debug("Adding TAIL to message")
+                        self.queue.add_message(TAIL)
+
+                        self.logger.info("Sending producer acknowledgement")
+                        self.socket.send(PRODUCER_ACK_MESSAGE)
                 except Exception:
                     raise socket.error
 

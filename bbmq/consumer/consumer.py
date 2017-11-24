@@ -50,7 +50,6 @@ def main():
             if msg == HEAD:
                 print "message body starts"
                 msg_body = ""
-                continue
             elif msg == TAIL:
                 print "message ends"
                 break
