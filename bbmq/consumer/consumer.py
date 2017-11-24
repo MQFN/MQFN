@@ -2,11 +2,13 @@
 
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import settings
 import socket
 import traceback
 import signal
+from partition import Message
 
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 CLIENT_SUBSCRIBER = settings.CLIENT_SUBSCRIBER
@@ -15,6 +17,9 @@ CLIENT_SHUTDOWN_SIGNAL = settings.CLIENT_SHUTDOWN_SIGNAL
 PORT = settings.PORT
 MAX_MESSAGE_SIZE = settings.MAX_MESSAGE_SIZE
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
+PARTITION_SIZE = settings.PARTITION_SIZE
+HEAD = settings.HEAD
+TAIL = settings.TAIL
 
 s = socket.socket()
 host = socket.gethostname()
@@ -36,17 +41,26 @@ def main():
     while True:
         message = raw_input("Enter FETCH to fetch message: ")
 
-
-
         s.send(message)
 
+        # message will be sent in the form of packets of a specific size and assimilated in the receiver end
+        msg_body = ""
+        while True:
+            msg = s.recv(PARTITION_SIZE)
+            if msg == HEAD:
+                print "message body starts"
+                msg_body = ""
+                continue
+            elif msg == TAIL:
+                print "message ends"
+                break
+            else:
+                msg_body += msg
 
-
-        msg = s.recv(MAX_MESSAGE_SIZE)
-        if msg == CLOSE_CONNECTION_SIGNAL:
+        if msg_body == CLOSE_CONNECTION_SIGNAL:
             print "closing con"
             break
-        print "Message from queue: " + str(msg)
+        print "Message from queue: " + str(msg_body)
     s.close()
 
 
