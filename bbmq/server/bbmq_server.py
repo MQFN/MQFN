@@ -24,9 +24,11 @@ import signal
 
 # --------------------------Custom imports------------------------------------------
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import settings
 from bbmq import BBMQ
+from partition_messages import Message
 
 
 LOG_FILEPATH = settings.LOG_FILEPATH
@@ -169,19 +171,40 @@ class ConsumerThread(threading.Thread):
         :return:
         """
         try:
+            msg_body = []
             while True:
                 try:
-                    request = self.socket.recv(MAX_MESSAGE_SIZE)
+                    # recall the consumer will only request for new messages so what the Consumer Thread is actually
+                    # receiving is simply a FETCH message, hence there is no need search for partitions in messages
+                    # received by the Consumer Thread
+
+                    # For the ConsumerThread any send operation will involve partitioning the message and sending
+
+                    # here we are only receiving a message of 1 byte only
+                    request = self.socket.recv(1024)
+
                     if request == CLIENT_SHUTDOWN_SIGNAL:
-                        self.socket.send(CLOSE_CONNECTION_SIGNAL)
+                        logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
+                        # the close connection signal has to be sent using packets
+                        packets = Message(CLOSE_CONNECTION_SIGNAL)
+                        logger.info("Sending CLOSE_CONNECTION_SIGNAL")
+                        for packet in packets:
+                            self.socket.send(packet)
+
                         break
                     if request == CONSUMER_REQUEST_WORD:
                         self.logger.debug("Received request for new message")
                         self.logger.debug("Fetching from queue")
-                        message = self.queue.fetch_message(block=True)
-                        self.socket.send(message)
+                        msg_body[:] = []
+                        while True:
+                            message = self.queue.fetch_message(block=True)
+                            msg_body.append(message)
+                            self.socket.send(message)
+
                     else:
+                        self.socket.send(HEAD)
                         self.socket.send(INVALID_PROTOCOL)
+                        self.socket.send(TAIL)
                 except Exception:
                     raise socket.error
 
