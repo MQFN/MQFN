@@ -28,15 +28,16 @@ PID_FILENAME = "bbmq.pid"
 
 # Message components
 import hashlib
+import secrets
 
-MESSAGE_HEAD_SECRET = os.environ["MESSAGE_HEAD_SECRET"]
-MESSAGE_TAIL_SECRET = os.environ["MESSAGE_TAIL_SECRET"]
+MESSAGE_HEAD_SECRET = secrets.MESSAGE_HEAD_SECRET
+MESSAGE_TAIL_SECRET = secrets.MESSAGE_TAIL_SECRET
 
 assert MESSAGE_HEAD_SECRET
 assert MESSAGE_TAIL_SECRET
 
-HEAD = hashlib.sha256(MESSAGE_HEAD_SECRET)
-TAIL = hashlib.sha256(MESSAGE_TAIL_SECRET)
+HEAD = hashlib.sha256(MESSAGE_HEAD_SECRET).hexdigest()
+TAIL = hashlib.sha256(MESSAGE_TAIL_SECRET).hexdigest()
 PARTITION_SIZE = 4096
 
 # confirm pid filepath location and log filepath location, if tmp is not found, create a tmp
