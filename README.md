@@ -21,7 +21,8 @@ The following communication protocol will be followed during communication betwe
     - **`CLIENT_SHUTDOWN_SIGNAL`** indicates that the client is ready to close the 
     connection. The server responds by **`CLOSE_CONNECTION_SIGNAL`**
     
-    Note that only the message is sent with a head and tail.
+    Note that only the message body and the **`CLIENT_SHUTDOWN_SIGNAL`** are sent with a head and
+     tail.
     
 2. Consumer:
     - **``** 

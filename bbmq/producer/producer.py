@@ -15,6 +15,7 @@ SERVER_ACKNOWLEDGEMENT = settings.SERVER_ACKNOWLEDGEMENT
 CLIENT_SHUTDOWN_SIGNAL = settings.CLIENT_SHUTDOWN_SIGNAL
 PORT = settings.PORT
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
+PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 
 s = socket.socket()
 s.settimeout(2)
@@ -56,6 +57,10 @@ def main():
             if acknowledgement == CLOSE_CONNECTION_SIGNAL:
                 print "closing socket"
                 break
+            elif acknowledgement == PRODUCER_ACK_MESSAGE:
+                print "producer acknowledgement message received"
+
+
         except KeyboardInterrupt:
             print "interrupt event"
             break
