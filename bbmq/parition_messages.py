@@ -20,6 +20,8 @@ class Message:
         self.size = sys.getsizeof(message)
         self.body_partitions = int(self.size/PARTITION_SIZE)
         # partitions the text into self.body_partitions number of partitions
+        if self.body_partitions == 0:
+            self.body_partitions = 1
         self.partitions = textwrap.wrap(self.message, PARTITION_SIZE)
 
     def __iter__(self):
@@ -40,7 +42,7 @@ class Message:
         else:
             if self.i <= self.body_partitions:
                 self.i += 1
-                return self.partitions[self.i-1]
+                return self.partitions[self.i-2]
             else:
                 return TAIL
                 raise StopIteration()
