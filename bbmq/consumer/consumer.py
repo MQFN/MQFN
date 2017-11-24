@@ -2,13 +2,13 @@
 
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import settings
 import socket
 import traceback
 import signal
-from partition import Message
+from partition_messages import Message
 
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 CLIENT_SUBSCRIBER = settings.CLIENT_SUBSCRIBER

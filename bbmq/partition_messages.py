@@ -43,6 +43,7 @@ class Message:
             if self.i <= self.body_partitions:
                 self.i += 1
                 return self.partitions[self.i-2]
-            else:
+            elif self.i == self.body_partitions + 1:
                 return TAIL
+            else:
                 raise StopIteration()
