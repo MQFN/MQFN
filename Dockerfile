@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:2.7-slim
+# The base image here is ubuntu:latest
+FROM riflerrick/mqfn-essentials:latest
 
 # Set the working directory to /
 WORKDIR /app
@@ -11,11 +11,11 @@ ADD . /app
 RUN pip install -r requirements.txt
 RUN pip install -e .
 
-# Make port 80 available to the world outside this container
-EXPOSE 80
+# Make port 15333 available to the world outside this container
+EXPOSE 15333
 
 # Define environment variable
 # ENV <env var name> <env var value>
 
 # command to run when the container launches
-CMD ["bbmq", "start"]
+CMD ["./bbmq/server/server_daemon.py", "start"]

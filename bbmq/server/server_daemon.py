@@ -67,14 +67,12 @@ class Service(object):
         run the process as a daemon
         :return:
         """
-        with daemon.DaemonContext():
-            # the pid has to be stored inside the daemon because the daemon actually spawns a
-            #  different process
-
-            # The daemon context must have a separate logging.basicConfig and that is crucial.
-            self.prepare_for_daemonizing_process()
-            server_instance = Server()
-            server_instance.start()
+        # the pid has to be stored inside the daemon because the daemon actually spawns a
+        #  different process
+        # The daemon context must have a separate logging.basicConfig and that is crucial.
+        self.prepare_for_daemonizing_process()
+        server_instance = Server()
+        server_instance.start()
 
     def stop(self):
         """
