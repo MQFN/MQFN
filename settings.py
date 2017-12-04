@@ -75,7 +75,7 @@ LOGGING = {
     },
     'loggers': {
         'server_daemon': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'server_daemon_console_logger': {
@@ -83,27 +83,27 @@ LOGGING = {
             'propagate': False
         },
         'bbmq_server_module':{
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'Server': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'BBMQServer': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'ProducerThread': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'ConsumerThread': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         },
         'ConnectionThread': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'propagate': False
         }
     }

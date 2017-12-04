@@ -24,7 +24,7 @@ logging.basicConfig(stream=sys.stdout ,level=LOG_LEVEL)
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger("server_daemon_console_logger")
 
-
+logger.info("BASE_DIR: " + BASE_DIR)
 class Service(object):
 
     def __init__(self):

@@ -23,7 +23,7 @@ TAIL = settings.TAIL
 
 s = socket.socket()
 host = socket.gethostname()
-port = PORT
+port = 32770
 
 def main():
     client_metadata = {

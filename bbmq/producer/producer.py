@@ -20,7 +20,7 @@ PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 s = socket.socket()
 s.settimeout(2)
 host = socket.gethostname()
-port = PORT
+port = 32770
 
 
 def main():
