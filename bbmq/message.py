@@ -15,6 +15,13 @@ class BaseMessage(object):
         """
         self.message = message
 
+    def __str__(self):
+        """
+        for printing the message
+        :return:
+        """
+        return self.message
+
     def append(self, part):
         """
         append the original message with this part

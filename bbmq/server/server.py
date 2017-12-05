@@ -85,7 +85,10 @@ class Server(object):
         self.logger.debug("Spawning connection thread")
         self.server.spawn_connection_thread()
         while True:
+            self.logger.debug("Waiting for connections from connection queue")
             connection = self.server.connection_queue.get(block=True)
+            self.logger.debug("new connection received from connection queue: ")
+            self.logger.debug(connection)
             # The connection will be a dictionary of the following format
             # {
             #     "client_type": client_type,
