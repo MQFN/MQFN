@@ -22,7 +22,7 @@ PARTITION_SIZE = settings.PARTITION_SIZE
 s = socket.socket()
 s.settimeout(2)
 host = socket.gethostname()
-port = 32781
+port = settings.PORT
 
 def main():
 

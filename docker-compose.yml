@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 services:
   web:
     network_mode: host
@@ -10,6 +10,6 @@ services:
       - './:/app'
     environment:
       CONTAINER_SERVER_PORT: 15333
-      OUTER_PORT: OUTER_PORT
+      OUTER_PORT: 15333
     ports:
       - 15333:15333

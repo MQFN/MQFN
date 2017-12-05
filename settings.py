@@ -1,18 +1,19 @@
 import logging
 import os
 
-PORT = 15333
+PORT = os.environ["CONTAINER_SERVER_PORT"]
+assert PORT
+
+PORT = int(PORT)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # LOG_FILEPATH = "/srv/webapps/BBMQ/logs/bbmq.log"
 LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "bbmq.log")
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 SERVER_MAX_QUEUED_CON = 5
 TOPICS = ["PR_PAYLOADS"]
 CLIENT_PUBLISHER = "PRODUCER"
 CLIENT_SUBSCRIBER = "CONSUMER"
-
-# TODO: Reduce the size of the MAX_MESSAGE_SIZE, as the ideal way to transfer messages would be to send
-# TODO: messages in smaller packets and assimilate them in the receiver end.
 
 MAX_MESSAGE_SIZE = 65536
 SERVER_ACKNOWLEDGEMENT = "ROGER"
