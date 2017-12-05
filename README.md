@@ -15,24 +15,27 @@ The following communication protocol will be followed during communication betwe
 1. Producer: 
     - **`CLIENT_PUBLISHER`** first verifies that the client is indeed a producer or a
      publisher. The server sends the producer a **`SERVER_ACKNOWLEDGEMENT`**
-    - **`HEAD-msg_body-TAIL`** all messages will be sent in this format and also stored 
-    in the queue in this format. The server sends the producer a **`PRODUCER_ACK_MESSAGE`**
-    to acknowledge that it has sent the entire message
+    - **`HEAD-msg_body-TAIL`** all messages will be sent in this format. The server sends the
+     producer a **`PRODUCER_ACK_MESSAGE`** to acknowledge that it has sent the entire message.
     - **`CLIENT_SHUTDOWN_SIGNAL`** indicates that the client is ready to close the 
     connection. The server responds by **`CLOSE_CONNECTION_SIGNAL`**
     
-    Note that only the message body and the **`CLIENT_SHUTDOWN_SIGNAL`** are sent with a head and
-     tail.
+    All messages are exchanged using HEAD <msg> TAIL 
     
 2. Consumer:
     - **``** 
 
 ### Instructions for running without Docker:
-`pip install -r requirements.txt` into a virtualenv
-`pip install -e .` to install the package bbmq
-`bbmq start` to start the server
-`./producer.py` to start a producer
-`./consumer.py` to start a consumer
+- `pip install -r requirements.txt` into a virtualenv
+- `./bbmq/server/server_daemon.py start` to start the server
+- `./producer.py` to start a producer
+- `./consumer.py` to start a consumer
 
-You can spawn any number of producers and consumers. 
+You can spawn any number of producers and consumers.
+
+### Instructions for running with Docker:
+- cd to the root dir
+- `docker build -t mqfn/mqfn:1.0 .` to build the image
+- `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it mqfn/mqfn:1.0` to
+ start the container. 
 
