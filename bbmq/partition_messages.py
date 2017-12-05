@@ -16,7 +16,7 @@ class Message(BaseMessage):
         Initialize the Message class
         :param message:
         """
-        message.BaseMessage.__init__(self, message)
+        BaseMessage.__init__(self, message)
         self.i = 0
         self.size = sys.getsizeof(message)
         self.body_partitions = int(self.size/PARTITION_SIZE)

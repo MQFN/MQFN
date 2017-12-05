@@ -6,6 +6,8 @@ assert PORT
 
 PORT = int(PORT)
 
+WORKER_PORT = 15333
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # LOG_FILEPATH = "/srv/webapps/BBMQ/logs/bbmq.log"
 LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "bbmq.log")

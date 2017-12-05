@@ -56,7 +56,7 @@ class BaseMessage(object):
         """
         if self.message[:len(HEAD)] == HEAD:
             return True, self.message[len(HEAD):]
-        return False, None
+        return False, ""
 
     def has_message_tail(self):
         """
@@ -66,4 +66,4 @@ class BaseMessage(object):
         """
         if self.message[-(len(TAIL)):] == TAIL:
             return True, self.message[:-(len(TAIL))]
-        return False, None
+        return False, ""

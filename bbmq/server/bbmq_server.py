@@ -83,6 +83,8 @@ class ProducerThread(threading.Thread):
         run the thread. called when the start() method of Thread super class is called
         :return:
         """
+        msg = None
+        msg_body = None
         try:
             while True:
                 try:
@@ -119,6 +121,7 @@ class ProducerThread(threading.Thread):
                         self.logger.debug("Publishing to queue")
 
                         # The message is simply added to the queue
+                        self.logger.info("Enqueuing message: " + msg_body)
                         self.queue.add_message(msg_body)
 
                         self.logger.info("Sending producer acknowledgement")
@@ -128,16 +131,14 @@ class ProducerThread(threading.Thread):
                         for packet in producer_ack_message:
                             self.socket.send(packet)
 
-                    self.logger.debug("Deleting msg and msg_body")
-                    del(msg)
-                    del(msg_body)
-
                 except Exception:
                     raise socket.error
 
         except Exception:
             self.logger.error("Socket Error. Check the logs to know more")
             exc_type, exc_val, exc_tb = sys.exc_info()
+            stack = traceback.format_exc()
+            self.logger.error(stack)
             traceback.print_exception(exc_type, exc_val, exc_tb)
 
         finally:
@@ -181,6 +182,8 @@ class ConsumerThread(threading.Thread):
         run the thread. called when the start() method of Thread super class is called
         :return:
         """
+        msg = None
+        msg_body = None
         try:
             while True:
                 try:
@@ -220,6 +223,8 @@ class ConsumerThread(threading.Thread):
                         queue_message = Message(message="")
                         queue_message.append(self.queue.fetch_message(block=True))
 
+                        self.logger.info("Dequeued message: " + queue_message)
+
                         for packet in queue_message:
                             self.socket.send(packet)
 
@@ -228,16 +233,14 @@ class ConsumerThread(threading.Thread):
                         self.socket.send(INVALID_PROTOCOL)
                         self.socket.send(TAIL)
 
-                    self.logger.debug("Deleting msg and msg_body")
-                    del (msg)
-                    del(msg_body)
-
                 except Exception:
                     raise socket.error
 
         except Exception:
             self.logger.error("Socket Error. Check the logs to know more")
             exc_type, exc_val, exc_tb = sys.exc_info()
+            stack = traceback.format_exc()
+            self.logger.error(stack)
             traceback.print_exception(exc_type, exc_val, exc_tb)
 
         finally:
@@ -314,6 +317,8 @@ class ConnectionThread(threading.Thread):
                 self.logger.error("Error in Connection Thread. Check the logs for the"
                                   " Traceback")
                 exc_type, exc_val, exc_tb = sys.exc_info()
+                stack = traceback.format_exc()
+                self.logger.error(stack)
                 traceback.print_exception(exc_type, exc_val, exc_tb)
 
     def join(self, timeout=None):

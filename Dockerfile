@@ -18,4 +18,4 @@ ENV CONTAINER_SERVER_PORT=15333
 ENV OUTER_PORT=15333
 
 # command to run when the container launches
-CMD ["./bbmq/server/server_daemon.py", "start"]
+# CMD ["./bbmq/server/server_daemon.py", "start"]

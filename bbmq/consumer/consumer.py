@@ -24,7 +24,7 @@ TAIL = settings.TAIL
 
 s = socket.socket()
 host = socket.gethostname()
-port = settings.PORT
+port = settings.WORKER_PORT
 
 def main():
     client_metadata = {
@@ -70,8 +70,10 @@ def main():
 
         print "Message from queue: " + str(msg_body)
 
-        del(msg)
-        del(msg_body)
+        if msg:
+            del(msg)
+        if msg_body:
+            del(msg_body)
 
     s.close()
 

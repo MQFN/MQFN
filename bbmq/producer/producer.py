@@ -22,7 +22,7 @@ PARTITION_SIZE = settings.PARTITION_SIZE
 s = socket.socket()
 s.settimeout(2)
 host = socket.gethostname()
-port = settings.PORT
+port = settings.WORKER_PORT
 
 def main():
 
@@ -45,6 +45,8 @@ def main():
     if message == SERVER_ACKNOWLEDGEMENT:
         print "go forward"
     print "Start com: Enter SHUTDOWN to stop com"
+    msg = None
+    msg_body = None
     while True:
         try:
             message = raw_input("Message to send to queue: ")
@@ -83,10 +85,6 @@ def main():
             elif msg_body.equals(PRODUCER_ACK_MESSAGE):
                 print "producer acknowledgement message received"
 
-            print "Deleting msg and msg_body objects"
-            del(msg)
-            del(msg_body)
-
         except KeyboardInterrupt:
             print "interrupt event"
             break
@@ -95,6 +93,7 @@ def main():
             break
 
         finally:
+            print "Deleting msg and msg_body objects"
             if msg:
                 del(msg)
             if msg_body:
