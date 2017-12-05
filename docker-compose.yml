@@ -1,0 +1,15 @@
+version: '3'
+services:
+  web:
+    network_mode: host
+    build:
+      context: web
+      dockerfile: Dockerfile
+    image: mqfn/mqfn:1.0
+    volumes:
+      - './:/app'
+    environment:
+      CONTAINER_SERVER_PORT: 15333
+      OUTER_PORT: OUTER_PORT
+    ports:
+      - 15333:15333
