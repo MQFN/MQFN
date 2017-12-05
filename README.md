@@ -38,4 +38,7 @@ You can spawn any number of producers and consumers.
 - `docker build -t mqfn/mqfn:1.0 .` to build the image
 - `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it mqfn/mqfn:1.0` to
  start the container. 
+- `docker exec -it <container id> /bin/bash` to login to the container
+- `./producer.py` to start the producer
+- `./consumer.py` to start the consumer
 
