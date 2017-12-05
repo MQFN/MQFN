@@ -9,6 +9,7 @@ import socket
 import traceback
 import signal
 from partition_messages import Message
+from message import BaseMessage
 
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 CLIENT_SUBSCRIBER = settings.CLIENT_SUBSCRIBER
@@ -41,25 +42,37 @@ def main():
     while True:
         message = raw_input("Enter FETCH to fetch message: ")
 
-        s.send(message)
+        msg = Message(message)
+        for packet in msg:
+            s.send(packet)
 
         # message will be sent in the form of packets of a specific size and assimilated in the receiver end
-        msg_body = ""
+        msg = BaseMessage(message="")
+        msg_body = BaseMessage(message="")
         while True:
-            msg = s.recv(PARTITION_SIZE)
-            if msg == HEAD:
-                print "message body starts"
-                msg_body = ""
-            elif msg == TAIL:
-                print "message ends"
+            part = s.recv(PARTITION_SIZE)
+            msg.append(part)
+            if msg.has_message_head():
+                print "HEAD received for message"
+                # the has_message_head method returns the real message clubbed with the HEAD as its
+                # second value in tuple
+                msg_body.append(msg.has_message_head()[1])
+            if msg.has_message_tail():
+                print "TAIL received for message"
+                msg_body.append(msg.has_message_tail()[1])
                 break
             else:
-                msg_body += msg
+                msg_body.append(msg)
 
-        if msg_body == CLOSE_CONNECTION_SIGNAL:
+        if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
             print "closing con"
             break
+
         print "Message from queue: " + str(msg_body)
+
+        del(msg)
+        del(msg_body)
+
     s.close()
 
 

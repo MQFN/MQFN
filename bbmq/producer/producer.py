@@ -8,6 +8,7 @@ import socket
 import traceback
 import signal
 from partition_messages import Message
+from message import BaseMessage
 
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 CLIENT_SUBSCRIBER = settings.CLIENT_SUBSCRIBER
@@ -16,12 +17,12 @@ CLIENT_SHUTDOWN_SIGNAL = settings.CLIENT_SHUTDOWN_SIGNAL
 PORT = settings.PORT
 CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
+PARTITION_SIZE = settings.PARTITION_SIZE
 
 s = socket.socket()
 s.settimeout(2)
 host = socket.gethostname()
-port = 32770
-
+port = 32781
 
 def main():
 
@@ -51,15 +52,40 @@ def main():
             packets = Message(message)
             for packet in packets:
                 print "packet now: {}".format(packet)
-                s.send(packet)
 
-            acknowledgement = s.recv(1024)
-            if acknowledgement == CLOSE_CONNECTION_SIGNAL:
+                # import pdb
+                # pdb.set_trace()
+
+                data_size = s.send(packet)
+                print "size of sent data:"
+                print data_size
+
+            msg = BaseMessage(message="")
+            msg_body = BaseMessage(message="")
+            while True:
+                part = s.recv(PARTITION_SIZE)
+                msg.append(part)
+                if msg.has_message_head():
+                    print "HEAD received for message"
+                    # the has_message_head method returns the real message clubbed with the HEAD as its
+                    # second value in tuple
+                    msg_body.append(msg.has_message_head()[1])
+                if msg.has_message_tail():
+                    print "TAIL received for message"
+                    msg_body.append(msg.has_message_tail()[1])
+                    break
+                else:
+                    msg_body.append(msg)
+
+            if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
                 print "closing socket"
                 break
-            elif acknowledgement == PRODUCER_ACK_MESSAGE:
+            elif msg_body.equals(PRODUCER_ACK_MESSAGE):
                 print "producer acknowledgement message received"
 
+            print "Deleting msg and msg_body objects"
+            del(msg)
+            del(msg_body)
 
         except KeyboardInterrupt:
             print "interrupt event"
@@ -67,6 +93,13 @@ def main():
         except socket.timeout:
             print "timeout exception"
             break
+
+        finally:
+            if msg:
+                del(msg)
+            if msg_body:
+                del(msg_body)
+
     s.close()
 
 def signal_handler(signal, frame):
