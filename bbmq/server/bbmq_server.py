@@ -29,6 +29,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import settings
 from bbmq import BBMQ
 from partition_messages import Message
+from message import BaseMessage
 
 
 LOG_FILEPATH = settings.LOG_FILEPATH
@@ -83,50 +84,54 @@ class ProducerThread(threading.Thread):
         :return:
         """
         try:
-            msg_body = []
             while True:
                 try:
-
+                    # The Queue will only store the message and thats all.
+                    msg = BaseMessage(message="")
+                    msg_body = BaseMessage(message="")
                     while True:
-                        msg = self.socket.recv(PARTITION_SIZE)
-                        if msg == HEAD:
-                            # empty msg_body
-                            msg_body[:] = []
+                        part = self.socket.recv(PARTITION_SIZE)
+                        msg.append(part)
+                        if msg.has_message_head():
                             self.logger.debug("HEAD received for message")
-                        if msg == TAIL:
+                            # the has_message_head method returns the real message clubbed with the HEAD as its
+                            # second value in tuple
+                            msg_body.append(msg.has_message_head()[1])
+                        if msg.has_message_tail():
                             self.logger.debug("TAIL received for message")
+                            msg_body.append(msg.has_message_tail()[1])
                             break
                         else:
                             msg_body.append(msg)
 
-                    if len(msg_body) == 1:
-                        if msg_body[0] == CLIENT_SHUTDOWN_SIGNAL:
-                            logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
-                            logger.info("Closing the connection with the producer")
-                            self.socket.send(CLOSE_CONNECTION_SIGNAL)
-                            break
-                        else:
-                            self.logger.debug("Received payload")
-                            self.logger.debug("Publishing to queue")
-                            self.logger.debug("Adding HEAD to message")
-                            self.queue.add_message(HEAD)
-                            self.queue.add_message(msg_body[0])
-                            self.logger.debug("Adding TAIL to message")
-                            self.queue.add_message(TAIL)
+                    if msg_body.equals(CLIENT_SHUTDOWN_SIGNAL):
+                        logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
+                        logger.info("Closing the connection with the producer")
+
+                        self.logger.debug("Packetizing CLOSE_CONNECTION_SIGNAL")
+                        close_con_signal = Message(CLOSE_CONNECTION_SIGNAL)
+                        for packet in close_con_signal:
+                            self.socket.send(packet)
+                        del(close_con_signal)
+                        break
                     else:
                         self.logger.debug("Received payload")
                         self.logger.debug("Publishing to queue")
 
-                        self.logger.debug("Adding HEAD to message")
-                        self.queue.add_message(HEAD)
-                        for packet in msg_body:
-                            self.queue.add_message(packet)
-
-                        self.logger.debug("Adding TAIL to message")
-                        self.queue.add_message(TAIL)
+                        # The message is simply added to the queue
+                        self.queue.add_message(msg_body)
 
                         self.logger.info("Sending producer acknowledgement")
-                        self.socket.send(PRODUCER_ACK_MESSAGE)
+
+                        self.logger.debug("Packetizing PRODUCER_ACK_MESSAGE")
+                        producer_ack_message = Message(PRODUCER_ACK_MESSAGE)
+                        for packet in producer_ack_message:
+                            self.socket.send(packet)
+
+                    self.logger.debug("Deleting msg and msg_body")
+                    del(msg)
+                    del(msg_body)
+
                 except Exception:
                     raise socket.error
 
@@ -136,6 +141,12 @@ class ProducerThread(threading.Thread):
             traceback.print_exception(exc_type, exc_val, exc_tb)
 
         finally:
+            self.logger.debug("Deleting msg_body and msg if exists")
+            if msg:
+                del(msg)
+            if msg_body:
+                del(msg_body)
+
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                        self.topic_name))
             self.socket.close()
@@ -171,40 +182,56 @@ class ConsumerThread(threading.Thread):
         :return:
         """
         try:
-            msg_body = []
             while True:
                 try:
-                    # recall the consumer will only request for new messages so what the Consumer Thread is actually
-                    # receiving is simply a FETCH message, hence there is no need search for partitions in messages
-                    # received by the Consumer Thread
+                    msg = BaseMessage(message="")
+                    msg_body = BaseMessage(message="")
 
-                    # For the ConsumerThread any send operation will involve partitioning the message and sending
+                    while True:
+                        part = self.socket.recv(PARTITION_SIZE)
+                        msg.append(part)
+                        if msg.has_message_head():
+                            self.logger.debug("HEAD received for message")
+                            # the has_message_head method returns the real message clubbed with the HEAD as its
+                            # second value in tuple
+                            msg_body.append(msg.has_message_head()[1])
+                        if msg.has_message_tail():
+                            self.logger.debug("TAIL received for message")
+                            msg_body.append(msg.has_message_tail()[1])
+                            break
+                        else:
+                            msg_body.append(msg)
 
-                    # here we are only receiving a message of 1 byte only
-                    request = self.socket.recv(1024)
-
-                    if request == CLIENT_SHUTDOWN_SIGNAL:
-                        logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
+                    if msg_body.equals(CLIENT_SHUTDOWN_SIGNAL):
+                        self.logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
                         # the close connection signal has to be sent using packets
                         packets = Message(CLOSE_CONNECTION_SIGNAL)
-                        logger.info("Sending CLOSE_CONNECTION_SIGNAL")
+                        self.logger.info("Sending CLOSE_CONNECTION_SIGNAL")
+                        self.logger.debug("Packetizing CLOSE_CONNECTION_SIGNAL")
                         for packet in packets:
                             self.socket.send(packet)
-
                         break
-                    if request == CONSUMER_REQUEST_WORD:
+
+                    if msg_body.equals(CONSUMER_REQUEST_WORD):
                         self.logger.debug("Received request for new message")
                         self.logger.debug("Fetching from queue")
-                        msg_body[:] = []
-                        while True:
-                            message = self.queue.fetch_message(block=True)
-                            msg_body.append(message)
-                            self.socket.send(message)
+
+                        self.logger.debug("Packetizing message from queue")
+                        queue_message = Message(message="")
+                        queue_message.append(self.queue.fetch_message(block=True))
+
+                        for packet in queue_message:
+                            self.socket.send(packet)
 
                     else:
                         self.socket.send(HEAD)
                         self.socket.send(INVALID_PROTOCOL)
                         self.socket.send(TAIL)
+
+                    self.logger.debug("Deleting msg and msg_body")
+                    del (msg)
+                    del(msg_body)
+
                 except Exception:
                     raise socket.error
 
@@ -214,6 +241,12 @@ class ConsumerThread(threading.Thread):
             traceback.print_exception(exc_type, exc_val, exc_tb)
 
         finally:
+            self.logger.debug("Deleting msg and msg_body if exists")
+            if msg:
+                del(msg)
+            if msg_body:
+                del(msg_body)
+
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                            self.topic_name))
             self.socket.close()
