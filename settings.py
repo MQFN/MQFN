@@ -11,6 +11,14 @@ WORKER_PORT = 15333
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # LOG_FILEPATH = "/srv/webapps/BBMQ/logs/bbmq.log"
 LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "bbmq.log")
+
+SERVER_DAEMON_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "server_daemon.log")
+SERVER_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "server.log")
+PRODUCER_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "producer.log")
+CONSUMER_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "consumer.log")
+PRODUCER_THREAD_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "producer_thread.log")
+CONSUMER_THREAD_LOG_FILEPATH = os.path.join(BASE_DIR, "logs", "consumer_thread.log")
+
 LOG_LEVEL = logging.DEBUG
 SERVER_MAX_QUEUED_CON = 5
 TOPICS = ["PR_PAYLOADS"]
@@ -64,49 +72,79 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
+        'server_daemon_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': SERVER_DAEMON_LOG_FILEPATH,
+            'formatter': 'verbose'
+        },
+        'server_daemon_console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
-        'file': {
+        'server_log_handler': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': LOG_FILEPATH,
+            'filename': SERVER_LOG_FILEPATH,
+            'formatter': 'verbose'
+        },
+        'producer_log_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': PRODUCER_LOG_FILEPATH,
+            'formatter': 'verbose'
+        },
+        'consumer_log_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': CONSUMER_LOG_FILEPATH,
+            'formatter': 'verbose'
+        },
+        'ProducerThread_log_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': PRODUCER_THREAD_LOG_FILEPATH,
+            'formatter': 'verbose'
+        },
+        'ConsumerThread_log_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': CONSUMER_THREAD_LOG_FILEPATH,
             'formatter': 'verbose'
         }
     },
     'loggers': {
         'server_daemon': {
-            'handlers': ['console'],
+            'handlers': ['server_daemon_file'],
             'propagate': False
         },
         'server_daemon_console_logger': {
-            'handlers': ['console'],
+            'handlers': ['server_daemon_console'],
             'propagate': False
         },
         'bbmq_server_module':{
-            'handlers': ['console'],
-            'propagate': False
-        },
-        'Server': {
-            'handlers': ['console'],
-            'propagate': False
-        },
-        'BBMQServer': {
-            'handlers': ['console'],
+            'handlers': ['server_log_handler'],
             'propagate': False
         },
         'ProducerThread': {
-            'handlers': ['console'],
+            'handlers': ['ProducerThread_log_handler'],
             'propagate': False
         },
         'ConsumerThread': {
-            'handlers': ['console'],
+            'handlers': ['ConsumerThread_log_handler'],
             'propagate': False
         },
         'ConnectionThread': {
-            'handlers': ['console'],
+            'handlers': ['server_log_handler'],
+            'propagate': False
+        },
+        'Producer': {
+            'handlers': ['producer_log_handler'],
+            'propagate': False
+        },
+        'Consumer': {
+            'handlers': ['consumer_log_handler'],
             'propagate': False
         }
     }
