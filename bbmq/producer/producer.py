@@ -66,18 +66,18 @@ def main():
             msg_body = BaseMessage(message="")
             while True:
                 part = s.recv(PARTITION_SIZE)
-                msg.append(part)
-                if msg.has_message_head():
-                    print "HEAD received for message"
-                    # the has_message_head method returns the real message clubbed with the HEAD as its
-                    # second value in tuple
-                    msg_body.append(msg.has_message_head()[1])
-                if msg.has_message_tail():
+                msg = BaseMessage(message=part)
+                print "msg now: {}".format(msg)
+
+                has_tail, msg_tail = msg.has_message_tail()
+                has_head, msg_head = msg.has_message_head()
+
+                if has_tail:
                     print "TAIL received for message"
-                    msg_body.append(msg.has_message_tail()[1])
+                    msg_body.append(msg_tail)
                     break
-                else:
-                    msg_body.append(msg)
+                elif has_head:
+                    print "HEAD received for message"
 
             if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
                 print "closing socket"
@@ -92,18 +92,48 @@ def main():
             print "timeout exception"
             break
 
-        finally:
-            print "Deleting msg and msg_body objects"
-            if msg:
-                del(msg)
-            if msg_body:
-                del(msg_body)
-
     s.close()
+
 
 def signal_handler(signal, frame):
     print "Killing process"
-    s.close()
+    packets = Message("SHUTDOWN")
+    for packet in packets:
+        print "packet now: {}".format(packet)
+
+        # import pdb
+        # pdb.set_trace()
+
+        data_size = s.send(packet)
+        print "size of sent data:"
+        print data_size
+
+    msg = BaseMessage(message="")
+    msg_body = BaseMessage(message="")
+    while True:
+        part = s.recv(PARTITION_SIZE)
+        msg.append(part)
+        print "msg now: {}".format(msg)
+
+        has_tail, msg_tail = msg.has_message_tail()
+        has_head, msg_head = msg.has_message_head()
+
+        if has_tail:
+            print "TAIL received for message"
+            msg_body.append(msg_tail)
+            break
+        if has_head:
+            print "HEAD received for message"
+            # the has_message_head method returns the real message clubbed with the HEAD as its
+            # second value in tuple
+            msg_body.append(msg_head)
+        else:
+            msg_body.append(msg)
+
+    if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
+        print "closing socket"
+        s.close()
+
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)

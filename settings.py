@@ -41,7 +41,7 @@ assert MESSAGE_TAIL_SECRET
 
 HEAD = hashlib.sha256(MESSAGE_HEAD_SECRET).hexdigest()
 TAIL = hashlib.sha256(MESSAGE_TAIL_SECRET).hexdigest()
-PARTITION_SIZE = 4096
+PARTITION_SIZE = 1024
 
 # confirm pid filepath location and log filepath location, if tmp is not found, create a tmp
 #  directory in the base dir

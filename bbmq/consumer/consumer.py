@@ -40,47 +40,81 @@ def main():
         print "go forward"
     print "Start com: Enter SHUTDOWN to stop com"
     while True:
-        message = raw_input("Enter FETCH to fetch message: ")
+        try:
+            message = raw_input("Enter FETCH to fetch message: ")
 
-        msg = Message(message)
-        for packet in msg:
-            s.send(packet)
+            msg = Message(message)
+            for packet in msg:
+                s.send(packet)
 
-        # message will be sent in the form of packets of a specific size and assimilated in the receiver end
-        msg = BaseMessage(message="")
-        msg_body = BaseMessage(message="")
-        while True:
-            part = s.recv(PARTITION_SIZE)
-            msg.append(part)
-            if msg.has_message_head():
-                print "HEAD received for message"
-                # the has_message_head method returns the real message clubbed with the HEAD as its
-                # second value in tuple
-                msg_body.append(msg.has_message_head()[1])
-            if msg.has_message_tail():
-                print "TAIL received for message"
-                msg_body.append(msg.has_message_tail()[1])
+            # message will be sent in the form of packets of a specific size and assimilated in the receiver end
+            msg = BaseMessage(message="")
+            msg_body = BaseMessage(message="")
+            while True:
+                print "receiving now"
+                part = s.recv(PARTITION_SIZE)
+                msg.append(part)
+
+                has_tail, msg_tail = msg.has_message_tail()
+                has_head, msg_head = msg.has_message_head()
+
+                if has_tail:
+                    print "TAIL received for message"
+                    msg_body.append(msg_tail)
+                    break
+                elif has_head:
+                    print "HEAD received for message"
+
+            if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
+                print "closing con"
                 break
-            else:
-                msg_body.append(msg)
 
-        if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
-            print "closing con"
+            print "Message from queue: " + str(msg_body)
+
+        except KeyboardInterrupt:
+            print "interrupt event"
             break
-
-        print "Message from queue: " + str(msg_body)
-
-        if msg:
-            del(msg)
-        if msg_body:
-            del(msg_body)
+        except socket.timeout:
+            print "timeout exception"
+            break
 
     s.close()
 
 
 def signal_handler(signal, frame):
     print "Killing process"
-    s.close()
+    msg = Message("SHUTDOWN")
+    for packet in msg:
+        s.send(packet)
+
+    # message will be sent in the form of packets of a specific size and assimilated in the receiver end
+    msg = BaseMessage(message="")
+    msg_body = BaseMessage(message="")
+    while True:
+        part = s.recv(PARTITION_SIZE)
+        msg.append(part)
+
+        print "msg now: {}".format(msg)
+
+        has_tail, msg_tail = msg.has_message_tail()
+        has_head, msg_head = msg.has_message_head()
+
+        if has_tail:
+            print "TAIL received for message"
+            msg_body.append(msg_tail)
+            break
+        if has_head:
+            print "HEAD received for message"
+            # the has_message_head method returns the real message clubbed with the HEAD as its
+            # second value in tuple
+            msg_body.append(msg_head)
+        else:
+            msg_body.append(str(msg))
+
+    if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
+        print "closing con"
+        s.close()
+
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)

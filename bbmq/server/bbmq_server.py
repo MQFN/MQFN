@@ -94,17 +94,18 @@ class ProducerThread(threading.Thread):
                     while True:
                         part = self.socket.recv(PARTITION_SIZE)
                         msg.append(part)
-                        if msg.has_message_head():
-                            self.logger.debug("HEAD received for message")
-                            # the has_message_head method returns the real message clubbed with the HEAD as its
-                            # second value in tuple
-                            msg_body.append(msg.has_message_head()[1])
-                        if msg.has_message_tail():
+                        self.logger.debug("message now: ")
+                        self.logger.debug(msg)
+
+                        has_tail, message_tail = msg.has_message_tail()
+                        has_head, message_head = msg.has_message_head()
+
+                        if has_tail:
                             self.logger.debug("TAIL received for message")
-                            msg_body.append(msg.has_message_tail()[1])
+                            msg_body.append(message_tail)
                             break
-                        else:
-                            msg_body.append(msg)
+                        elif has_head:
+                            self.logger.debug("HEAD received for message")
 
                     if msg_body.equals(CLIENT_SHUTDOWN_SIGNAL):
                         logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
@@ -121,7 +122,8 @@ class ProducerThread(threading.Thread):
                         self.logger.debug("Publishing to queue")
 
                         # The message is simply added to the queue
-                        self.logger.info("Enqueuing message: " + msg_body)
+                        self.logger.debug("Enqueuing message: " )
+                        self.logger.debug(msg_body)
                         self.queue.add_message(msg_body)
 
                         self.logger.info("Sending producer acknowledgement")
@@ -132,7 +134,9 @@ class ProducerThread(threading.Thread):
                             self.socket.send(packet)
 
                 except Exception:
-                    raise socket.error
+                    stack = traceback.format_exc()
+                    self.logger.error(stack)
+                    raise Exception
 
         except Exception:
             self.logger.error("Socket Error. Check the logs to know more")
@@ -193,17 +197,15 @@ class ConsumerThread(threading.Thread):
                     while True:
                         part = self.socket.recv(PARTITION_SIZE)
                         msg.append(part)
-                        if msg.has_message_head():
-                            self.logger.debug("HEAD received for message")
-                            # the has_message_head method returns the real message clubbed with the HEAD as its
-                            # second value in tuple
-                            msg_body.append(msg.has_message_head()[1])
-                        if msg.has_message_tail():
+                        has_tail, msg_tail = msg.has_message_tail()
+                        has_head, msg_head = msg.has_message_head()
+
+                        if has_tail:
                             self.logger.debug("TAIL received for message")
-                            msg_body.append(msg.has_message_tail()[1])
+                            msg_body.append(msg_tail)
                             break
-                        else:
-                            msg_body.append(msg)
+                        elif has_head:
+                            self.logger.debug("HEAD received for message")
 
                     if msg_body.equals(CLIENT_SHUTDOWN_SIGNAL):
                         self.logger.info("CLIENT_SHUTDOWN_SIGNAL recieved")
@@ -218,13 +220,10 @@ class ConsumerThread(threading.Thread):
                     if msg_body.equals(CONSUMER_REQUEST_WORD):
                         self.logger.debug("Received request for new message")
                         self.logger.debug("Fetching from queue")
-
+                        queue_message = self.queue.fetch_message(block=True)
+                        queue_message = Message(message=str(queue_message))
+                        self.logger.info("Dequeued message: " + str(queue_message))
                         self.logger.debug("Packetizing message from queue")
-                        queue_message = Message(message="")
-                        queue_message.append(self.queue.fetch_message(block=True))
-
-                        self.logger.info("Dequeued message: " + queue_message)
-
                         for packet in queue_message:
                             self.socket.send(packet)
 
@@ -234,7 +233,9 @@ class ConsumerThread(threading.Thread):
                         self.socket.send(TAIL)
 
                 except Exception:
-                    raise socket.error
+                    stack = traceback.format_exc()
+                    self.logger.error(stack)
+                    raise Exception
 
         except Exception:
             self.logger.error("Socket Error. Check the logs to know more")

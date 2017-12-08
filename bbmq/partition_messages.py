@@ -18,12 +18,12 @@ class Message(BaseMessage):
         """
         BaseMessage.__init__(self, message)
         self.i = 0
-        self.size = sys.getsizeof(message)
-        self.body_partitions = int(self.size/PARTITION_SIZE)
-        # partitions the text into self.body_partitions number of partitions
-        if self.body_partitions == 0:
-            self.body_partitions = 1
         self.partitions = textwrap.wrap(self.message, PARTITION_SIZE)
+        self.body_partitions = len(self.partitions)
+        print "body_partitions"
+        print self.body_partitions
+        print "partitions"
+        print self.partitions
 
     def __iter__(self):
         """

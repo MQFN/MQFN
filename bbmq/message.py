@@ -1,10 +1,13 @@
-import sys, os
+import sys, os, logging, logging.config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import settings
 
 HEAD = settings.HEAD
 TAIL = settings.TAIL
 PARTITION_SIZE = settings.PARTITION_SIZE
+
+logging.config.dictConfig(settings.LOGGING)
+logger = logging.getLogger("bbmq_server_module")
 
 
 class BaseMessage(object):
@@ -14,6 +17,7 @@ class BaseMessage(object):
         Message initialization
         """
         self.message = message
+        self.logger = logger
 
     def __str__(self):
         """
@@ -54,6 +58,8 @@ class BaseMessage(object):
         :param partition:
         :return: returns whether it has the message and if so, returns the real message clubbed with that separately
         """
+        # self.logger.debug("Message now: " + self.message)
+        # self.logger.debug("HEAD: {} and message[-(len(HEAD)):] = {}".format(HEAD, self.message[-(len(HEAD)):]))
         if self.message[:len(HEAD)] == HEAD:
             return True, self.message[len(HEAD):]
         return False, ""
@@ -64,6 +70,9 @@ class BaseMessage(object):
         :param partition:
         :return: returns if the message has tail, if so returns the real message clubbed with that separately
         """
+        # self.logger.debug("Message now: " + self.message)
+        # self.logger.debug("TAIL: {} and message[-(len(TAIL)):] = {}".format(TAIL, self.message[-(len(TAIL)):]))
         if self.message[-(len(TAIL)):] == TAIL:
-            return True, self.message[:-(len(TAIL))]
+            # the tail will always contain the HEAD
+            return True, self.message[len(HEAD):-(len(TAIL))]
         return False, ""
