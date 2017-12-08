@@ -46,7 +46,7 @@ class Server(object):
         """
         logging.basicConfig(filename=LOG_FILEPATH, level=LOG_LEVEL)
         logging.config.dictConfig(settings.LOGGING)
-        logger = logging.getLogger("Server")
+        logger = logging.getLogger("bbmq_server_module")
         self.server = BBMQServer()
         self.logger = logger
         self.logger.debug("Initializing BBMQ server")

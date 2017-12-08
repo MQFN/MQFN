@@ -7,6 +7,7 @@ import settings
 import socket
 import traceback
 import signal
+import logging, logging.config
 from partition_messages import Message
 from message import BaseMessage
 
@@ -26,131 +27,130 @@ s.settimeout(2)
 host = socket.gethostname()
 port = settings.WORKER_PORT
 
-def main():
+logging.config.dictConfig(settings.LOGGING)
 
-    client_metadata = {
-        "type": CLIENT_PUBLISHER,
-        "topic": "PR_PAYLOADS"
-    }
-    try:
-        s.connect((host, port))
-    except socket.error:
-        print "socket error:"
-        exc_type, exc_val, exc_tb = sys.exc_info()
-        traceback.print_exception(exc_type, exc_val, exc_tb)
-        exit(0)
 
-    print "connected to socket"
-    print "sending metadata"
-    s.send(str(client_metadata))
-    message = s.recv(1024)
-    if message == SERVER_ACKNOWLEDGEMENT:
-        print "go forward"
-    print "Start com: Enter SHUTDOWN to stop com"
-    msg = None
-    msg_body = None
-    while True:
+class Producer:
+
+    def __init__(self, topic, port=settings.WORKER_PORT, timeout=2):
+        """
+        instantiate a producer with that will publish to a specific topic in the queue
+        :param topic: string, topic name
+        :param port: int, port number
+        :param timeout: int, timeout for socket
+        """
+        self.logger.info("Instantiating producer")
+        self.topic = topic
+        self.port = port
+        self.timeout = timeout
+        self.logger = logging.getLogger("Producer")
+        self.socket = socket.socket()
+        self.socket.settimeout(self.timeout)
+        self.host = socket.gethostname()
+
+    def connect(self):
+        """
+        connect to the producer if possible
+        :return:
+        """
+        self.logger.info("Attempting to connect to server")
+        client_metadata = {
+            "type": CLIENT_PUBLISHER,
+            "topic": self.topic
+        }
         try:
-            message = raw_input("Message to send to queue: ")
+            self.socket.connect((self.host, self.port))
+            self.logger.info("Connected to server. Sending metadata")
+            self.socket.send(str(client_metadata))
+            message = self.socket.recv(1024)
+            if message == SERVER_ACKNOWLEDGEMENT:
+                self.logger.info("Producer acknowledged by server")
+        except socket.error:
+            self.logger.error("Unable to connect to the server")
+            stack = traceback.format_exc()
+            self.logger.error(stack)
+            return -1
+        return 0
 
-            # f = open(TEST_CONTENT_FILE_LOCATION, "r")
-            # message = f.read()
-            # f.close()
-            #
-            # print "message by reading file"
-            # print message
+    def close_socket(self):
+        """
+        closes the socket
+        :return:
+        """
+        msg = Message("SHUTDOWN")
+        for packet in msg:
+            s.send(packet)
+
+        # message will be sent in the form of packets of a specific size and assimilated in the receiver end
+        msg = BaseMessage(message="")
+        msg_body = BaseMessage(message="")
+        while True:
+            part = self.socket.recv(PARTITION_SIZE)
+            msg.append(part)
+
+            self.logger.debug("Msg now: {}".format(msg))
+
+            has_tail, msg_tail = msg.has_message_tail()
+            has_head, msg_head = msg.has_message_head()
+
+            if has_tail:
+                self.logger.debug("TAIL received for message")
+                msg_body.append(msg_tail)
+                break
+            if has_head:
+                self.logger.debug("HEAD received for message")
+                # the has_message_head method returns the real message clubbed with the HEAD as its
+                # second value in tuple
+                msg_body.append(msg_head)
+            else:
+                msg_body.append(str(msg))
+
+        if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
+            self.logger.info("Closing socket")
+        else:
+            self.logger.error("Could not receive the CLOSE_CONNECTION_SIGNAL. Closing socket anyway")
+
+        self.socket.close()
+
+    def publish(self, message):
+        """
+        runs the producer
+        :return:
+        """
+        msg = None
+        msg_body = None
+        try:
 
             packets = Message(message)
             for packet in packets:
-                print "packet now: {}".format(packet)
-
-                # import pdb
-                # pdb.set_trace()
+                self.logger.debug("Packet now: {}".format(packet))
 
                 data_size = s.send(packet)
-                print "size of sent data:"
-                print data_size
+                self.logger.debug("Size of data sent: {}".format(data_size))
 
             msg = BaseMessage(message="")
             msg_body = BaseMessage(message="")
             while True:
                 part = s.recv(PARTITION_SIZE)
                 msg = BaseMessage(message=part)
-                print "msg now: {}".format(msg)
+                self.logger.debug("Msg now: {}".format(msg))
 
                 has_tail, msg_tail = msg.has_message_tail()
                 has_head, msg_head = msg.has_message_head()
 
                 if has_tail:
-                    print "TAIL received for message"
+                    self.logger.debug("TAIL received for messsage")
                     msg_body.append(msg_tail)
                     break
                 elif has_head:
-                    print "HEAD received for message"
+                    self.logger.debug("HEAD received for message")
 
-            if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
-                print "closing socket"
-                break
-            elif msg_body.equals(PRODUCER_ACK_MESSAGE):
-                print "producer acknowledgement message received"
+            if msg_body.equals(PRODUCER_ACK_MESSAGE):
+                self.logger.info("Producer ack received")
+            else:
+                self.logger.info("Unexpected response received from server")
+                raise Exception
 
-        except KeyboardInterrupt:
-            print "interrupt event"
-            break
-        except socket.timeout:
-            print "timeout exception"
-            break
-
-    s.close()
-
-
-def signal_handler(signal, frame):
-    print "Killing process"
-    packets = Message("SHUTDOWN")
-    for packet in packets:
-        print "packet now: {}".format(packet)
-
-        # import pdb
-        # pdb.set_trace()
-
-        data_size = s.send(packet)
-        print "size of sent data:"
-        print data_size
-
-    msg = BaseMessage(message="")
-    msg_body = BaseMessage(message="")
-    while True:
-        part = s.recv(PARTITION_SIZE)
-        msg.append(part)
-        print "msg now: {}".format(msg)
-
-        has_tail, msg_tail = msg.has_message_tail()
-        has_head, msg_head = msg.has_message_head()
-
-        if has_tail:
-            print "TAIL received for message"
-            msg_body.append(msg_tail)
-            break
-        if has_head:
-            print "HEAD received for message"
-            # the has_message_head method returns the real message clubbed with the HEAD as its
-            # second value in tuple
-            msg_body.append(msg_head)
-        else:
-            msg_body.append(msg)
-
-    if msg_body.equals(CLOSE_CONNECTION_SIGNAL):
-        print "closing socket"
-        s.close()
-
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-
-if __name__ == "__main__":
-    main()
-
-
-
-
+        except Exception:
+            stack = traceback.format_exc()
+            self.logger.error(stack)

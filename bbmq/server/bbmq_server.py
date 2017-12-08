@@ -358,7 +358,7 @@ class BBMQServer(object):
         initialize the instance of BBMQ. create the socket, bind the hostname and port with
         the socket and listen for the connections to the socket
         """
-        self.logger = logging.getLogger("BBMQServer")
+        self.logger = logging.getLogger("bbmq_server_module")
         self.sock = socket.socket()
         self.hostname = socket.gethostname()
         self.port = settings.PORT
