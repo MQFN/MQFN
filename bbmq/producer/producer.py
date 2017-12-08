@@ -19,6 +19,8 @@ CLOSE_CONNECTION_SIGNAL = settings.CLOSE_CONNECTION_SIGNAL
 PRODUCER_ACK_MESSAGE = settings.PRODUCER_ACK_MESSAGE
 PARTITION_SIZE = settings.PARTITION_SIZE
 
+TEST_CONTENT_FILE_LOCATION = os.path.join(settings.BASE_DIR, "tests", "nosetests", "content_file")
+
 s = socket.socket()
 s.settimeout(2)
 host = socket.gethostname()
@@ -50,6 +52,13 @@ def main():
     while True:
         try:
             message = raw_input("Message to send to queue: ")
+
+            # f = open(TEST_CONTENT_FILE_LOCATION, "r")
+            # message = f.read()
+            # f.close()
+            #
+            # print "message by reading file"
+            # print message
 
             packets = Message(message)
             for packet in packets:

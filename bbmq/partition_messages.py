@@ -18,6 +18,7 @@ class Message(BaseMessage):
         """
         BaseMessage.__init__(self, message)
         self.i = 0
+
         self.partitions = textwrap.wrap(self.message, PARTITION_SIZE)
         self.body_partitions = len(self.partitions)
         print "body_partitions"
