@@ -22,11 +22,6 @@ PARTITION_SIZE = settings.PARTITION_SIZE
 
 TEST_CONTENT_FILE_LOCATION = os.path.join(settings.BASE_DIR, "tests", "nosetests", "content_file")
 
-s = socket.socket()
-s.settimeout(2)
-host = socket.gethostname()
-port = settings.WORKER_PORT
-
 logging.config.dictConfig(settings.LOGGING)
 
 
@@ -79,7 +74,7 @@ class Producer:
         """
         msg = Message("SHUTDOWN")
         for packet in msg:
-            s.send(packet)
+            self.socket.send(packet)
 
         # message will be sent in the form of packets of a specific size and assimilated in the receiver end
         msg = BaseMessage(message="")
@@ -125,13 +120,13 @@ class Producer:
             for packet in packets:
                 self.logger.debug("Packet now: {}".format(packet))
 
-                data_size = s.send(packet)
+                data_size = self.socket.send(packet)
                 self.logger.debug("Size of data sent: {}".format(data_size))
 
             msg = BaseMessage(message="")
             msg_body = BaseMessage(message="")
             while True:
-                part = s.recv(PARTITION_SIZE)
+                part = self.socket.recv(PARTITION_SIZE)
                 msg = BaseMessage(message=part)
                 self.logger.debug("Msg now: {}".format(msg))
 

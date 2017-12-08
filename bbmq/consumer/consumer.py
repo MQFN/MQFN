@@ -22,10 +22,6 @@ PARTITION_SIZE = settings.PARTITION_SIZE
 HEAD = settings.HEAD
 TAIL = settings.TAIL
 
-s = socket.socket()
-host = socket.gethostname()
-port = settings.WORKER_PORT
-
 logging.config.dictConfig(settings.LOGGING)
 
 
@@ -78,7 +74,7 @@ class Consumer:
         """
         msg = Message("SHUTDOWN")
         for packet in msg:
-            s.send(packet)
+            self.socket.send(packet)
 
         # message will be sent in the form of packets of a specific size and assimilated in the receiver end
         msg = BaseMessage(message="")
@@ -120,14 +116,14 @@ class Consumer:
             message = "FETCH"
             msg = Message(message)
             for packet in msg:
-                s.send(packet)
+                self.socket.send(packet)
 
             # message will be sent in the form of packets of a specific size and assimilated in the receiver end
             msg = BaseMessage(message="")
             msg_body = BaseMessage(message="")
             while True:
                 self.logger.debug("Receiving now")
-                part = s.recv(PARTITION_SIZE)
+                part = self.socket.recv(PARTITION_SIZE)
                 msg.append(part)
 
                 has_tail, msg_tail = msg.has_message_tail()
