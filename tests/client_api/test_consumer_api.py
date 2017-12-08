@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import settings
-from bbmq.producer import Consumer
+from bbmq.consumer.consumer import Consumer
 
 cons = Consumer("PR_PAYLOADS")
 cons.connect()
@@ -13,7 +13,7 @@ while True:
 
     a = raw_input()
 
-    if a == -1:
+    if a == "-1":
         cons.close_socket()
         break
     else:

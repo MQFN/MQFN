@@ -34,11 +34,12 @@ class Producer:
         :param port: int, port number
         :param timeout: int, timeout for socket
         """
-        self.logger.info("Instantiating producer")
+
         self.topic = topic
         self.port = port
         self.timeout = timeout
         self.logger = logging.getLogger("Producer")
+        self.logger.info("Instantiating producer")
         self.socket = socket.socket()
         self.socket.settimeout(self.timeout)
         self.host = socket.gethostname()
@@ -139,6 +140,8 @@ class Producer:
                     break
                 elif has_head:
                     self.logger.debug("HEAD received for message")
+
+            self.logger.debug("Message body now: {}".format(str(msg_body)))
 
             if msg_body.equals(PRODUCER_ACK_MESSAGE):
                 self.logger.info("Producer ack received")

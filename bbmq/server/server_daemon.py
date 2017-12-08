@@ -46,7 +46,6 @@ class Service(object):
         Stores pid in specific locations to prepare the process for daemonizing
         :return:
         """
-        self.logger.debug("Preparing for daemonizing process")
         pid = os.getpid()
         f = open(os.path.join(PID_FILEPATH, PID_FILENAME), "w")
         f.write(str(pid))

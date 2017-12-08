@@ -34,11 +34,12 @@ class Consumer:
         :param port: int, port number
         :param timeout: int, timeout for socket
         """
-        self.logger.info("Instantiating consumer")
+
         self.topic = topic
         self.port = port
         self.timeout = timeout
         self.logger = logging.getLogger("Consumer")
+        self.logger.info("Instantiating consumer")
         self.socket = socket.socket()
         self.socket.settimeout(self.timeout)
         self.host = socket.gethostname()
