@@ -32,8 +32,8 @@ The following communication protocol will be followed during communication betwe
 standard mysql port 3306 to port 1337 in the outer world.
 
 ### Instructions for connecting to the mysql docker container from the local machine using the mysql client:
-- For connecting to the mysql container from the outer world, we can use the following command `mysql -u root -h 0.0
-.0.0 --port=1337 -p`. This command will contact the mysql server using `0.0.0.0:1337`.
+- For connecting to the mysql container from the outer world, we can use the following command `mysql -u root -h 0.0.0.0 --port=1337 -p`. This command will contact
+ the mysql server using `0.0.0.0:1337`.
 - Note that we cannot use the hostname in order to connect to the container, we will have to use host as `0.0.0.0` 
 and the port as `1337` as that is the port that has been exposed
 
