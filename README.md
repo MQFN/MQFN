@@ -30,7 +30,9 @@ The following communication protocol will be followed during communication betwe
     Once again all messages are exchanged using a HEAD <msg> TAIL.  
     
 ### Persistence Layer
-A persistence layer is super important in order store queue messages in case of any unexpected crash of the server.
+A persistence layer is super important in order store queue messages in case of any unexpected crash of the server. 
+For preserving all the data a mysql server is used. The ORM used to interact with the mysql server is sql alchemy. 
+For the docs of sql alchemy refer to [http://docs.sqlalchemy.org/en/latest/orm/tutorial.html](http://docs.sqlalchemy.org/en/latest/orm/tutorial.html)
     
 ### Instructions for running mysql docker container:
 - Pull the docker image `docker pull mysql:latest`
