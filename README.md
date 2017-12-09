@@ -36,17 +36,13 @@ standard mysql port 3306 to port 1337 in the outer world.
 ### Instructions for running without Docker:
 - `pip install -r requirements.txt` into a virtualenv
 - `./bbmq/server/server_daemon.py start` to start the server
-- `./producer.py` to start a producer
-- `./consumer.py` to start a consumer
 
 You can spawn any number of producers and consumers.
 
 ### Instructions for running with Docker:
 - cd to the root dir
-- `docker build -t mqfn/mqfn:1.0 .` to build the image
-- `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it mqfn/mqfn:1.0` to
+- `docker pull riflerrick/mqfn:1.0` to build the image
+- `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0` to
  start the container. 
-- `docker exec -it <container id> /bin/bash` to login to the container
-- `./producer.py` to start the producer
-- `./consumer.py` to start the consumer
-
+- `docker exec -it <container id> /bin/bash` to login to the container.
+- `./bbmq/server/server_daemon.py start` to start the server.
