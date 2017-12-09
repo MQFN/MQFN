@@ -1,5 +1,5 @@
 # The base image here is ubuntu:latest
-FROM riflerrick/mqfn-essentials:1.0
+FROM riflerrick/mqfn-essentials:2.0
 
 # Set the working directory to /
 WORKDIR /app

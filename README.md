@@ -15,15 +15,22 @@ The following communication protocol will be followed during communication betwe
 1. Producer: 
     - **`CLIENT_PUBLISHER`** first verifies that the client is indeed a producer or a
      publisher. The server sends the producer a **`SERVER_ACKNOWLEDGEMENT`**
-    - **`HEAD-msg_body-TAIL`** all messages will be sent in this format. The server sends the
-     producer a **`PRODUCER_ACK_MESSAGE`** to acknowledge that it has sent the entire message.
+    - **`Message`** The server sends the producer a **`PRODUCER_ACK_MESSAGE`** to acknowledge that it has sent the entire message.
     - **`CLIENT_SHUTDOWN_SIGNAL`** indicates that the client is ready to close the 
     connection. The server responds by **`CLOSE_CONNECTION_SIGNAL`**
     
-    All messages are exchanged using HEAD <msg> TAIL 
+    All messages are exchanged using HEAD <msg> TAIL.
     
 2. Consumer:
-    - **``** 
+    - **`CLIENT_SUBSCRIBER`** first verifies that the client is indeed a consumer or a subscriber. The server sends 
+    the consumer a **`SERVER_ACKNOWLEDGEMENT`**.
+    - **`FETCH`** This message asks the server for any new messages. The server sends the message
+    - **`CLIENT_SHUTDOWN_SIGNAL`** indicates that the client is ready to close the connection. The server responds by **`CLOSE_CONNECTION_SIGNAL`**
+    
+    Once again all messages are exchanged using a HEAD <msg> TAIL.  
+    
+### Persistence Layer
+A persistence layer is super important in order store queue messages in case of any unexpected crash of the server.
     
 ### Instructions for running mysql docker container:
 - Pull the docker image `docker pull mysql:latest`

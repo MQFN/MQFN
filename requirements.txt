@@ -13,4 +13,6 @@ pylint==1.7.4
 python-daemon==2.1.2
 singledispatch==3.4.0.3
 six==1.11.0
+SQLAlchemy==1.1.15
+virtualenv==15.1.0
 wrapt==1.10.11
