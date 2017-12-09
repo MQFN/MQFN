@@ -24,6 +24,14 @@ The following communication protocol will be followed during communication betwe
     
 2. Consumer:
     - **``** 
+    
+### Instructions for running mysql docker container and contacting the container using mysql client
+- Pull the docker image `docker pull mysql:latest`
+- Run the docker mysql conatiner `docker run -e MYSQL_ROOT_PASSWORD=<password> -d --expose 3306 --publish 0.0.0
+.0:1337:3306 mysql:latest`. This command will start the mysql docker container in detached mode and expose the 
+standard mysql port 3306 to port 1337 in the outer world.
+- For connecting to the mysql container from the outer world, we can use the following command `mysql -u root -h 0.0
+.0.0 --port=1337 -p`. This command will contact the mysql server using `0.0.0.0:1337`. 
 
 ### Instructions for running without Docker:
 - `pip install -r requirements.txt` into a virtualenv
