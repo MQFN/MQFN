@@ -25,13 +25,27 @@ The following communication protocol will be followed during communication betwe
 2. Consumer:
     - **``** 
     
-### Instructions for running mysql docker container and contacting the container using mysql client
+### Instructions for running mysql docker container:
 - Pull the docker image `docker pull mysql:latest`
-- Run the docker mysql conatiner `docker run -e MYSQL_ROOT_PASSWORD=<password> -d --expose 3306 --publish 0.0.0.0:1337:3306 mysql:latest`. This command will start the
- mysql docker container in detached mode and expose the 
+- Run the docker mysql conatiner `docker run -h <hostname> -e MYSQL_ROOT_PASSWORD=<password> -d --expose 3306 
+--publish 0.0.0.0:1337:3306 mysql:latest`. This command will start the mysql docker container in detached mode and expose the 
 standard mysql port 3306 to port 1337 in the outer world.
+
+### Instructions for connecting to the mysql docker container from the local machine using the mysql client:
 - For connecting to the mysql container from the outer world, we can use the following command `mysql -u root -h 0.0
-.0.0 --port=1337 -p`. This command will contact the mysql server using `0.0.0.0:1337`. 
+.0.0 --port=1337 -p`. This command will contact the mysql server using `0.0.0.0:1337`.
+- Note that we cannot use the hostname in order to connect to the container, we will have to use host as `0.0.0.0` 
+and the port as `1337` as that is the port that has been exposed
+
+### Instructions for connecting to the mysql docker container from another container:
+- For connecting to the mysql container from another container we will need `link` the application container to the 
+mysql container in the following way: `docker run --link <mysql_container_name> mysql -it <repo>/<name>:<tag> 
+/bin/bash`. Once linked mysql will now be available from the hostname `<hostname>` that was defined to start the 
+mysql container and the standard port `3306`. Inside the container the command can be `mysql -u root -h <hostname> -p`
+This command will contact the host using the standard port.
+
+For the `mqfn` container the command can be `docker run --link <mysql_container_name>-v $PWD:/app --expose 15333 
+--publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0`  
 
 ### Instructions for running without Docker:
 - `pip install -r requirements.txt` into a virtualenv
@@ -39,7 +53,7 @@ standard mysql port 3306 to port 1337 in the outer world.
 
 You can spawn any number of producers and consumers.
 
-### Instructions for running with Docker:
+### Instructions for running with Docker(without linking mysql):
 - cd to the root dir
 - `docker pull riflerrick/mqfn:1.0` to build the image
 - `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0` to
