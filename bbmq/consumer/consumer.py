@@ -41,7 +41,10 @@ class Consumer:
         self.logger = logging.getLogger("Consumer")
         self.logger.info("Instantiating consumer")
         self.socket = socket.socket()
-        self.socket.settimeout(self.timeout)
+
+        # For blocking calls, we cannnot have a socket timeout
+
+        # self.socket.settimeout(self.timeout)
         self.host = socket.gethostname()
 
     def connect(self):

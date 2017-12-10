@@ -128,9 +128,13 @@ class ProducerThread(threading.Thread):
                         self.logger.debug("Received payload")
 
                         self.logger.info("Writing to database")
-                        self.queue_object.message = [MessageModel(is_fetched=False, content=msg_body,
+
+                        self.logger.debug("Queue object")
+                        self.logger.debug(self.queue_object)
+
+                        self.queue_object.message.append(MessageModel(is_fetched=False, content=msg_body,
                                                                   publish_timestamp=datetime.datetime.utcnow(),
-                                                                  consumed_timestamp=datetime.datetime.utcnow())]
+                                                                  consumed_timestamp=datetime.datetime.utcnow()))
                         ModelManager.commit_session(self.session)
                         self.logger.info("Written to database")
 
@@ -198,8 +202,6 @@ class ConsumerThread(threading.Thread):
         self.queue = queue
         self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
-        self.session = ModelManager.create_session(models.engine)
-        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name == topic_name).first()
 
     def run(self):
         """
@@ -248,14 +250,25 @@ class ConsumerThread(threading.Thread):
                             self.socket.send(packet)
 
                         # TODO: Add response from client after receiving message
-                        # Store the message id of the message in the queue for proper replacement
+                        # TODO: Store the message id of the message in the queue for proper replacement
 
                         self.logger.info("Updating database")
-                        content_regex = "*{}*".format(str(queue_message))
-                        message_obj = self.session.query(MessageModel).filter(MessageModel.content.ilike(content_regex))
-                        ModelManager.delete_from_session(self.session, message_obj)
+                        self.logger.info("Starting session")
+                        self.session = ModelManager.create_session(models.engine)
+                        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name ==
+                                                                                  self.topic_name).first()
+
+                        message_objs = self.session.query(MessageModel).filter(MessageModel.content.ilike(str(
+                            queue_message))).all()
+
+                        for message_obj in message_objs:
+                            if not message_obj.is_fetched:
+                                message_obj.is_fetched = True
+                                break
                         ModelManager.commit_session(self.session)
                         self.logger.info("Database updated")
+                        self.logger.info("Closing database session")
+                        ModelManager.close_session(self.session)
 
                     else:
                         self.socket.send(HEAD)
@@ -281,8 +294,9 @@ class ConsumerThread(threading.Thread):
             if msg_body:
                 del(msg_body)
 
-            self.logger.info("Closing database session")
-            ModelManager.close_session(self.session)
+            if self.session:
+                self.logger.info("Closing database session")
+                ModelManager.close_session(self.session)
 
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                            self.topic_name))

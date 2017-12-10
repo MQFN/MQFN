@@ -134,6 +134,6 @@ class Message(Base):
         representation of the Message class
         :return:
         """
-        return "<Message (queue_id: {}, is_fetched: {}, content: {}, publish_timestamp: {}, " \
-               "consumed_timestamp: {})>".format(self.queue_id, self.is_fetched, self.content,
+        return "<Message (queue_id: {}, is_fetched: {}, content: {}...{}, publish_timestamp: {}, " \
+               "consumed_timestamp: {})>".format(self.queue_id, self.is_fetched, self.content[:10],self.content[10:],
                                                  self.publish_timestamp, self.consumed_timestamp)
