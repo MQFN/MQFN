@@ -17,14 +17,19 @@ import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import models
-from models import ModelManager
-from models import Queue
-from models import Message
+# import models
+# from models import ModelManager
+# from models import Queue
+# from models import Message
 
 import settings
 import signal
 from bbmq_server import BBMQServer
+
+from bbmq_server import ModelManager
+from bbmq_server import QueueModel as Queue
+from bbmq_server import MessageModel
+from bbmq_server import models
 
 TOPICS = settings.TOPICS
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
