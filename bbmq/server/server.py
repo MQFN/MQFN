@@ -97,11 +97,22 @@ class Server(object):
             self.server.topics[topic]["queue"] = queue
 
             self.logger.info("Writing topic to database if not already exist")
-            queue_obj = Queue(name=topic, created_timestamp=datetime.datetime.utcnow())
-            if len((self.session.query(Queue).filter(Queue.name == topic)).all()) == 0:
-                ModelManager.add_to_session(self.session, queue_obj)
 
-            self.logger.info("Created queue for topic: {}".format(topic))
+            if len((self.session.query(Queue).filter(Queue.name == topic)).all()) == 0:
+                queue_obj = Queue(name=topic, created_timestamp=datetime.datetime.utcnow())
+                ModelManager.add_to_session(self.session, queue_obj)
+            else:
+                self.logger.info("Fetching all unfetched messages from database and pushing them to queue")
+                queue_obj = ((self.session.query(Queue).filter(Queue.name == topic)).all())[0]
+                queue_messages = queue_obj.message
+                for message in queue_messages:
+                    if message.is_fetched == False:
+                        # hence the message is not fetched yet
+                        self.logger.debug("Adding unfetched message:")
+                        self.logger.debug(message)
+                        queue.add_message(str(message.content))
+
+            self.logger.info("Created queue for topic: {} and pushed unfetched messages".format(topic))
 
         self.logger.info("Committing to database")
         ModelManager.commit_session(self.session)
