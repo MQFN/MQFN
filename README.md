@@ -69,3 +69,23 @@ You can spawn any number of producers and consumers.
  start the container. 
 - `docker exec -it <container id> /bin/bash` to login to the container.
 - `./bbmq/server/server_daemon.py start` to start the server.
+
+### Database integration
+Tables:
+- Queues
+- Messages
+
+Queues is a table storing all queues with their corresponding topics
+Messages will have a one to many relationship with the Queues table.
+
+Attributes of Queues
+- **id** (primary key, foreign key to messages, integer)
+- **name** of queue (varchar)
+- **created_timestamp** timestamp of creation of the queue
+
+Attributes of Messages
+- **id** (primary key, intger)
+- **is_fetched**(boolean) (True if the corresponding message has been fetched, false otherwise, deffault=false)
+- **content** (varchar) (content of the message)
+- **publish_timestamp** (datetime) (timestamp of publishing of the message)
+- **consumed_timestamp** (datetime) (timestamp of consumption of the message) (default=NULL)
