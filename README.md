@@ -72,19 +72,20 @@ You can spawn any number of producers and consumers.
 
 ### Database integration
 Tables:
-- Queues
-- Messages
+- Queue
+- Message
 
 Queues is a table storing all queues with their corresponding topics
 Messages will have a one to many relationship with the Queues table.
 
-Attributes of Queues
+Attributes of Queue
 - **id** (primary key, foreign key to messages, integer)
 - **name** of queue (varchar)
 - **created_timestamp** timestamp of creation of the queue
 
-Attributes of Messages
+Attributes of Message
 - **id** (primary key, intger)
+- **queue_id** (foreign key to queue)
 - **is_fetched**(boolean) (True if the corresponding message has been fetched, false otherwise, deffault=false)
 - **content** (varchar) (content of the message)
 - **publish_timestamp** (datetime) (timestamp of publishing of the message)
