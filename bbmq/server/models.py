@@ -11,10 +11,12 @@ MYSQL_USERNAME = secrets.MYSQL_USERNAME
 MYSQL_PASSWORD = secrets.MYSQL_PASSWORD
 MYSQL_HOSTNAME = secrets.MYSQL_HOSTNAME
 MYSQL_DATABASE_NAME = secrets.MYSQL_DATABASE_NAME
+MYSQL_HOST_PORT = secrets.MYSQL_HOST_PORT
 
 MAX_MESSAGE_SIZE = settings.MAX_MESSAGE_SIZE
 
-database_url = 'mysql://{}:{}@{}/{}'.format(MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_HOSTNAME, MYSQL_DATABASE_NAME)
+database_url = 'mysql://{}:{}@{}:{}/{}'.format(MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_HOSTNAME, MYSQL_HOST_PORT,
+                                               MYSQL_DATABASE_NAME)
 engine = create_engine(database_url)
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
@@ -61,6 +63,15 @@ class ModelManager(object):
         session.commit()
 
     @classmethod
+    def delete_from_session(cls, session, obj):
+        """
+        delete the object from the session
+        :param session:
+        :return:
+        """
+        session.delete(obj)
+
+    @classmethod
     def rollback_session(cls, session):
         """
         rollback the current session
@@ -68,6 +79,15 @@ class ModelManager(object):
         :return:
         """
         session.rollback()
+
+    @classmethod
+    def close_session(cls, session):
+        """
+        close the current session
+        :param session:
+        :return:
+        """
+        session.close()
 
 
 class Queue(Base):
@@ -77,8 +97,10 @@ class Queue(Base):
     __tablename__ = "Queue"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(20))
+    name = Column(String(20), unique=True)
     created_timestamp = Column(DateTime)
+
+    message = relationship("Message", back_populates="queue")
 
     def __repr__(self):
         """
@@ -100,6 +122,8 @@ class Message(Base):
     content = Column(String(MAX_MESSAGE_SIZE))
     publish_timestamp = Column(DateTime)
     consumed_timestamp = Column(DateTime)
+
+    queue = relationship("Queue", back_populates="message")
 
     # The consumed_timestamp should ideally have a null value for default but that is not feasible here so
     # for checking we will first check whether the is_fetched value is true, if so we consider the consumed_timestamp

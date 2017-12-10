@@ -37,7 +37,7 @@ For the docs of sql alchemy refer to [http://docs.sqlalchemy.org/en/latest/orm/t
 ### Instructions for running mysql docker container:
 - Pull the docker image `docker pull riflerrick/mqfn-mysql`
 - Run the docker mysql conatiner `docker run -h <hostname> -e MYSQL_ROOT_PASSWORD=<password> -d --expose 3306 
---publish 0.0.0.0:1337:3306 riflerrick/mqfn-mysql`. This command will start the mysql docker container in
+--publish 0.0.0.0:1337:3306 riflerrick/mqfn-mysql:latest`. This command will start the mysql docker container in
  detached mode and expose the 
 standard mysql port 3306 to port 1337 in the outer world.
 

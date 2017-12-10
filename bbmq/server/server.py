@@ -13,8 +13,14 @@ Communication between the connection thread and the main thread. It uses a simpl
 
 import logging, logging.config
 import sys, os
+import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import models
+from models import ModelManager
+from models import Queue
+from models import Message
 
 import settings
 import signal
@@ -24,8 +30,6 @@ TOPICS = settings.TOPICS
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
 LOG_LEVEL = settings.LOG_LEVEL
 LOG_FILEPATH = settings.LOG_FILEPATH
-
-
 
 
 def signal_handler(signal, frame):
@@ -50,6 +54,12 @@ class Server(object):
         self.server = BBMQServer()
         self.logger = logger
         self.logger.debug("Initializing BBMQ server")
+
+        self.logger.info("Creating a session for database")
+        self.session = ModelManager.create_session(models.engine)
+
+        self.logger.info("Creating all tables")
+        models.Base.metadata.create_all(models.engine)
 
     def start(self):
         """
@@ -80,7 +90,18 @@ class Server(object):
                 continue
             queue = self.server.create_queue()
             self.server.topics[topic]["queue"] = queue
+
+            self.logger.info("Writing topic to database if not already exist")
+            queue_obj = Queue(name=topic, created_timestamp=datetime.datetime.utcnow())
+            if len((self.session.query(Queue).filter(Queue.name == topic)).all()) == 0:
+                ModelManager.add_to_session(self.session, queue_obj)
+
             self.logger.info("Created queue for topic: {}".format(topic))
+
+        self.logger.info("Committing to database")
+        ModelManager.commit_session(self.session)
+        self.logger.info("Closing database session")
+        ModelManager.close_session(self.session)
 
         self.logger.debug("Spawning connection thread")
         self.server.spawn_connection_thread()

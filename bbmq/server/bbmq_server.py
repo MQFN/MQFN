@@ -20,6 +20,7 @@ import sys, os
 import ast
 import traceback
 import Queue
+import datetime
 import signal
 
 # --------------------------Custom imports------------------------------------------
@@ -31,6 +32,10 @@ from bbmq import BBMQ
 from partition_messages import Message
 from message import BaseMessage
 
+import models
+from models import ModelManager
+from models import Queue as QueueModel
+from models import Message as MessageModel
 
 LOG_FILEPATH = settings.LOG_FILEPATH
 LOG_LEVEL = settings.LOG_LEVEL
@@ -77,6 +82,8 @@ class ProducerThread(threading.Thread):
         self.queue = queue
         self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
+        self.session = ModelManager.create_session(models.engine)
+        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name == topic_name).first()
 
     def run(self):
         """
@@ -119,6 +126,14 @@ class ProducerThread(threading.Thread):
                         break
                     else:
                         self.logger.debug("Received payload")
+
+                        self.logger.info("Writing to database")
+                        self.queue_object.message = [MessageModel(is_fetched=False, content=msg_body,
+                                                                  publish_timestamp=datetime.datetime.utcnow(),
+                                                                  consumed_timestamp=datetime.datetime.utcnow())]
+                        ModelManager.commit_session(self.session)
+                        self.logger.info("Written to database")
+
                         self.logger.debug("Publishing to queue")
 
                         # The message is simply added to the queue
@@ -152,6 +167,9 @@ class ProducerThread(threading.Thread):
             if msg_body:
                 del(msg_body)
 
+            self.logger.info("Closing database session")
+            ModelManager.close_session(self.session)
+
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                        self.topic_name))
             self.socket.close()
@@ -180,6 +198,8 @@ class ConsumerThread(threading.Thread):
         self.queue = queue
         self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
+        self.session = ModelManager.create_session(models.engine)
+        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name == topic_name).first()
 
     def run(self):
         """
@@ -227,6 +247,16 @@ class ConsumerThread(threading.Thread):
                         for packet in queue_message:
                             self.socket.send(packet)
 
+                        # TODO: Add response from client after receiving message
+                        # Store the message id of the message in the queue for proper replacement
+
+                        self.logger.info("Updating database")
+                        content_regex = "*{}*".format(str(queue_message))
+                        message_obj = self.session.query(MessageModel).filter(MessageModel.content.ilike(content_regex))
+                        ModelManager.delete_from_session(self.session, message_obj)
+                        ModelManager.commit_session(self.session)
+                        self.logger.info("Database updated")
+
                     else:
                         self.socket.send(HEAD)
                         self.socket.send(INVALID_PROTOCOL)
@@ -250,6 +280,9 @@ class ConsumerThread(threading.Thread):
                 del(msg)
             if msg_body:
                 del(msg_body)
+
+            self.logger.info("Closing database session")
+            ModelManager.close_session(self.session)
 
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                            self.topic_name))
