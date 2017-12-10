@@ -35,9 +35,10 @@ For preserving all the data a mysql server is used. The ORM used to interact wit
 For the docs of sql alchemy refer to [http://docs.sqlalchemy.org/en/latest/orm/tutorial.html](http://docs.sqlalchemy.org/en/latest/orm/tutorial.html)
     
 ### Instructions for running mysql docker container:
-- Pull the docker image `docker pull mysql:latest`
+- Pull the docker image `docker pull riflerrick/mqfn-mysql`
 - Run the docker mysql conatiner `docker run -h <hostname> -e MYSQL_ROOT_PASSWORD=<password> -d --expose 3306 
---publish 0.0.0.0:1337:3306 mysql:latest`. This command will start the mysql docker container in detached mode and expose the 
+--publish 0.0.0.0:1337:3306 riflerrick/mqfn-mysql`. This command will start the mysql docker container in
+ detached mode and expose the 
 standard mysql port 3306 to port 1337 in the outer world.
 
 ### Instructions for connecting to the mysql docker container from the local machine using the mysql client:
@@ -53,8 +54,8 @@ mysql container in the following way: `docker run --link <mysql_container_name> 
 mysql container and the standard port `3306`. Inside the container the command can be `mysql -u root -h <hostname> -p`
 This command will contact the host using the standard port.
 
-For the `mqfn` container the command can be `docker run --link <mysql_container_name>-v $PWD:/app --expose 15333 
---publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0`  
+For the `mqfn` container the command can be `docker run --link <mysql_container_name>-v $PWD:/app --expose
+ 15333 --publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0`  
 
 ### Instructions for running without Docker:
 - `pip install -r requirements.txt` into a virtualenv
@@ -90,3 +91,13 @@ Attributes of Message
 - **content** (varchar) (content of the message)
 - **publish_timestamp** (datetime) (timestamp of publishing of the message)
 - **consumed_timestamp** (datetime) (timestamp of consumption of the message) (default=NULL)
+
+At server start:
+- Create database entries for new queues if any. 
+
+- A database query will be made in order to check for any messages that was not 
+fetched. If such messages are found, such messages will be pushed to the queue. 
+
+- For every new message that is pushed by any producer, the content of the message will be written to the Message table as a new entry with a default is_fetched value of False
+
+- For every message that is pulled by any consumer, the **is_fetched** attribute will be updated as True and the **consumed_timestamp** will be updated.
