@@ -1,10 +1,7 @@
 import logging
 import os
 
-PORT = os.environ["CONTAINER_SERVER_PORT"]
-assert PORT
-
-PORT = int(PORT)
+PORT = 15333
 
 WORKER_PORT = 15333
 

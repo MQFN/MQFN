@@ -19,7 +19,7 @@ database_url = 'mysql://{}:{}@{}:{}/{}'.format(MYSQL_USERNAME, MYSQL_PASSWORD, M
                                                MYSQL_DATABASE_NAME)
 engine = create_engine(database_url)
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey
@@ -119,7 +119,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True)
     queue_id = Column(Integer, ForeignKey('Queue.id'))
     is_fetched = Column(Boolean, default=False)
-    content = Column(String(MAX_MESSAGE_SIZE))
+    content = Column(Text)
     publish_timestamp = Column(DateTime)
     consumed_timestamp = Column(DateTime)
 
