@@ -26,10 +26,13 @@ import settings
 import signal
 from bbmq_server import BBMQServer
 
-from bbmq_server import ModelManager
-from bbmq_server import QueueModel as Queue
-from bbmq_server import MessageModel
-from bbmq_server import models
+USE_DB = settings.USE_DB
+
+if USE_DB:
+    from bbmq_server import ModelManager
+    from bbmq_server import QueueModel as Queue
+    from bbmq_server import MessageModel
+    from bbmq_server import models
 
 TOPICS = settings.TOPICS
 CLIENT_PUBLISHER = settings.CLIENT_PUBLISHER
@@ -60,11 +63,12 @@ class Server(object):
         self.logger = logger
         self.logger.debug("Initializing BBMQ server")
 
-        self.logger.info("Creating a session for database")
-        self.session = ModelManager.create_session(models.engine)
+        if USE_DB:
+            self.logger.info("Creating a session for database")
+            self.session = ModelManager.create_session(models.engine)
 
-        self.logger.info("Creating all tables")
-        models.Base.metadata.create_all(models.engine)
+            self.logger.info("Creating all tables")
+            models.Base.metadata.create_all(models.engine)
 
     def start(self):
         """
@@ -96,28 +100,29 @@ class Server(object):
             queue = self.server.create_queue()
             self.server.topics[topic]["queue"] = queue
 
-            self.logger.info("Writing topic to database if not already exist")
+            # self.logger.info("Writing topic to database if not already exist")
+            if USE_DB:
+                if len((self.session.query(Queue).filter(Queue.name == topic)).all()) == 0:
+                    queue_obj = Queue(name=topic, created_timestamp=datetime.datetime.utcnow())
+                    ModelManager.add_to_session(self.session, queue_obj)
+                else:
+                    self.logger.info("Fetching all unfetched messages from database and pushing them to queue")
+                    queue_obj = ((self.session.query(Queue).filter(Queue.name == topic)).all())[0]
+                    queue_messages = queue_obj.message
+                    for message in queue_messages:
+                        if message.is_fetched == False:
+                            # hence the message is not fetched yet
+                            self.logger.debug("Adding unfetched message:")
+                            self.logger.debug(message)
+                            queue.add_message(str(message.content))
 
-            if len((self.session.query(Queue).filter(Queue.name == topic)).all()) == 0:
-                queue_obj = Queue(name=topic, created_timestamp=datetime.datetime.utcnow())
-                ModelManager.add_to_session(self.session, queue_obj)
-            else:
-                self.logger.info("Fetching all unfetched messages from database and pushing them to queue")
-                queue_obj = ((self.session.query(Queue).filter(Queue.name == topic)).all())[0]
-                queue_messages = queue_obj.message
-                for message in queue_messages:
-                    if message.is_fetched == False:
-                        # hence the message is not fetched yet
-                        self.logger.debug("Adding unfetched message:")
-                        self.logger.debug(message)
-                        queue.add_message(str(message.content))
+            self.logger.info("Created queue for topic: {}".format(topic))
 
-            self.logger.info("Created queue for topic: {} and pushed unfetched messages".format(topic))
-
-        self.logger.info("Committing to database")
-        ModelManager.commit_session(self.session)
-        self.logger.info("Closing database session")
-        ModelManager.close_session(self.session)
+        if USE_DB:
+            self.logger.info("Committing to database")
+            ModelManager.commit_session(self.session)
+            self.logger.info("Closing database session")
+            ModelManager.close_session(self.session)
 
         self.logger.debug("Spawning connection thread")
         self.server.spawn_connection_thread()

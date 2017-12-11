@@ -32,10 +32,13 @@ from bbmq import BBMQ
 from partition_messages import Message
 from message import BaseMessage
 
-import models
-from models import ModelManager
-from models import Queue as QueueModel
-from models import Message as MessageModel
+USE_DB = settings.USE_DB
+
+if USE_DB:
+    import models
+    from models import ModelManager
+    from models import Queue as QueueModel
+    from models import Message as MessageModel
 
 LOG_FILEPATH = settings.LOG_FILEPATH
 LOG_LEVEL = settings.LOG_LEVEL
@@ -82,8 +85,9 @@ class ProducerThread(threading.Thread):
         self.queue = queue
         self.topic_name = topic_name
         self.socket.send(SERVER_ACKNOWLEDGEMENT)
-        self.session = ModelManager.create_session(models.engine)
-        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name == topic_name).first()
+        if USE_DB:
+            self.session = ModelManager.create_session(models.engine)
+            self.queue_object = self.session.query(QueueModel).filter(QueueModel.name == topic_name).first()
 
     def run(self):
         """
@@ -132,11 +136,12 @@ class ProducerThread(threading.Thread):
                         self.logger.debug("Queue object")
                         self.logger.debug(self.queue_object)
 
-                        self.queue_object.message.append(MessageModel(is_fetched=False, content=msg_body,
-                                                                  publish_timestamp=datetime.datetime.utcnow(),
-                                                                  consumed_timestamp=datetime.datetime.utcnow()))
-                        ModelManager.commit_session(self.session)
-                        self.logger.info("Written to database")
+                        if USE_DB:
+                            self.queue_object.message.append(MessageModel(is_fetched=False, content=msg_body,
+                                                                      publish_timestamp=datetime.datetime.utcnow(),
+                                                                      consumed_timestamp=datetime.datetime.utcnow()))
+                            ModelManager.commit_session(self.session)
+                            self.logger.info("Written to database")
 
                         self.logger.debug("Publishing to queue")
 
@@ -171,8 +176,9 @@ class ProducerThread(threading.Thread):
             if msg_body:
                 del(msg_body)
 
-            self.logger.info("Closing database session")
-            ModelManager.close_session(self.session)
+            if USE_DB:
+                self.logger.info("Closing database session")
+                ModelManager.close_session(self.session)
 
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                        self.topic_name))
@@ -252,23 +258,24 @@ class ConsumerThread(threading.Thread):
                         # TODO: Add response from client after receiving message
                         # TODO: Store the message id of the message in the queue for proper replacement
 
-                        self.logger.info("Updating database")
-                        self.logger.info("Starting session")
-                        self.session = ModelManager.create_session(models.engine)
-                        self.queue_object = self.session.query(QueueModel).filter(QueueModel.name ==
-                                                                                  self.topic_name).first()
+                        if USE_DB:
+                            self.logger.info("Updating database")
+                            self.logger.info("Starting session")
+                            self.session = ModelManager.create_session(models.engine)
+                            self.queue_object = self.session.query(QueueModel).filter(QueueModel.name ==
+                                                                                      self.topic_name).first()
 
-                        message_objs = self.session.query(MessageModel).filter(MessageModel.content.ilike(str(
-                            queue_message))).all()
+                            message_objs = self.session.query(MessageModel).filter(MessageModel.content.ilike(str(
+                                queue_message))).all()
 
-                        for message_obj in message_objs:
-                            if not message_obj.is_fetched:
-                                message_obj.is_fetched = True
-                                break
-                        ModelManager.commit_session(self.session)
-                        self.logger.info("Database updated")
-                        self.logger.info("Closing database session")
-                        ModelManager.close_session(self.session)
+                            for message_obj in message_objs:
+                                if not message_obj.is_fetched:
+                                    message_obj.is_fetched = True
+                                    break
+                            ModelManager.commit_session(self.session)
+                            self.logger.info("Database updated")
+                            self.logger.info("Closing database session")
+                            ModelManager.close_session(self.session)
 
                     else:
                         self.socket.send(HEAD)
@@ -294,9 +301,10 @@ class ConsumerThread(threading.Thread):
             if msg_body:
                 del(msg_body)
 
-            if self.session:
-                self.logger.info("Closing database session")
-                ModelManager.close_session(self.session)
+            if USE_DB:
+                if self.session:
+                    self.logger.info("Closing database session")
+                    ModelManager.close_session(self.session)
 
             self.logger.info("Closing socket: {} for queue: {}".format(self.socket,
                                                                            self.topic_name))

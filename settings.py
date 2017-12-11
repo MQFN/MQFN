@@ -34,6 +34,9 @@ HELP_INSTRUCTIONS = os.path.join(BASE_DIR, "help_instructions.txt")
 PID_FILEPATH = os.path.join(BASE_DIR, "pid")
 PID_FILENAME = "bbmq.pid"
 
+# ------------------------------------------DB settings---------------------------
+USE_DB = False
+
 # Message components
 import hashlib
 import secrets

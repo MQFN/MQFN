@@ -18,6 +18,23 @@ class BaseMessage(object):
         """
         self.message = message
         self.logger = logger
+        self.id = None
+
+    def set_id(self, id):
+        """
+        sets the id of the message
+        :param id:
+        :return:
+        """
+        self.id = id
+
+    def get_id(self, id):
+        """
+        gets the id of the message
+        :param id:
+        :return:
+        """
+        return self.id
 
     def __str__(self):
         """
