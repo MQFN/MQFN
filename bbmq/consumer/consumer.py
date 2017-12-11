@@ -145,4 +145,3 @@ class Consumer:
         except Exception:
             stack = traceback.format_exc()
             self.logger.error(stack)
-

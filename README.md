@@ -68,6 +68,8 @@ You can spawn any number of producers and consumers.
 - `docker pull riflerrick/mqfn:1.0` to build the image
 - `docker run -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0` to
  start the container. 
+- `docker run -d -v $PWD:/app --expose 15333 --publish 0.0.0.0:15333:15333 -it riflerrick/mqfn:1.0` to start
+ the container in detached mode
 - `docker exec -it <container id> /bin/bash` to login to the container.
 - `./bbmq/server/server_daemon.py start` to start the server.
 
