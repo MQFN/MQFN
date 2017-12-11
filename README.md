@@ -73,6 +73,10 @@ You can spawn any number of producers and consumers.
 - `docker exec -it <container id> /bin/bash` to login to the container.
 - `./bbmq/server/server_daemon.py start` to start the server.
 
+### Running the container in production
+- `sudo docker run --restart unless-stopped -d --expose 15333 --publish 0.0.0.0:15333:15333 -it
+ riflerrick/mqfn:1.0 ./bbmq/server/server_daemon.py start` for starting the container and the service within it in detached mode.
+
 ### Database integration
 Tables:
 - Queue
