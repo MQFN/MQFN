@@ -131,11 +131,6 @@ class ProducerThread(threading.Thread):
                     else:
                         self.logger.debug("Received payload")
 
-                        self.logger.info("Writing to database")
-
-                        self.logger.debug("Queue object")
-                        self.logger.debug(self.queue_object)
-
                         if USE_DB:
                             self.queue_object.message.append(MessageModel(is_fetched=False, content=msg_body,
                                                                       publish_timestamp=datetime.datetime.utcnow(),
