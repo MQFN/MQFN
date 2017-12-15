@@ -136,3 +136,4 @@ cons.fetch() # for fetching messsages from the consumer
 cons.close_socket() # for closing the socket
 
 ```
+`fetch()` method of consumer class is a blocking function call and will not return unless something is available from the server. 
