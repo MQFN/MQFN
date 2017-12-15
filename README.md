@@ -93,7 +93,7 @@ Attributes of Queue
 Attributes of Message
 - **id** (primary key, intger)
 - **queue_id** (foreign key to queue)
-- **is_fetched**(boolean) (True if the corresponding message has been fetched, false otherwise, deffault=false)
+- **is_fetched**(boolean) (True if the corresponding message has been fetched, false otherwise, default=false)
 - **content** (varchar) (content of the message)
 - **publish_timestamp** (datetime) (timestamp of publishing of the message)
 - **consumed_timestamp** (datetime) (timestamp of consumption of the message) (default=NULL)
@@ -107,3 +107,32 @@ fetched. If such messages are found, such messages will be pushed to the queue.
 - For every new message that is pushed by any producer, the content of the message will be written to the Message table as a new entry with a default is_fetched value of False
 
 - For every message that is pulled by any consumer, the **is_fetched** attribute will be updated as True and the **consumed_timestamp** will be updated.
+
+A `USE_DB` variable has been added in the settings. If this is true, then a database is required for storing all the messages that are enqueued. 
+
+### Producer and Consumer APIs
+
+Producer and Consumer APIs have been written for producers and consumers to communicate with the server. 
+
+**Getting started with a producer:**
+```python
+from bbmq.producer.producer import Producer
+
+prod = Producer("topic_name") # for initializing the producer and publishing for "topic_name"
+prod.connect() # for connecting with the producer 
+prod.publish("helloworld") # for publishing the message "helloworld" to the producer
+prod.close_socket() # for closing the socket
+
+```
+
+**Getting started with a consumer**
+```python
+
+from bbmq.consumer.consumer import Consumer
+
+cons = Consumer("topic_name") # for initializing th consumer and subscribing to topic "topic_name"
+cons.connect() # for connecting to the consumer
+cons.fetch() # for fetching messsages from the consumer
+cons.close_socket() # for closing the socket
+
+```
